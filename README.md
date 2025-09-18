@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # arekmumobile
 
 A new Flutter project.
@@ -14,3 +15,6 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# arek-muhammadiyah-mobile
+>>>>>>> cf44e6b2e3a1a38c199753842cd0476da1029e3d
