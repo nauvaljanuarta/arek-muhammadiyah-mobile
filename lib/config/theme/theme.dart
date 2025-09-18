@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 class AppTheme {
-  static const Color primaryDark = Color(0xFF2D3748);    
+  static const Color primaryDark = Color(0xFF19183B);    
   static const Color primaryMedium = Color(0xFF4A90E2);    
   static const Color primaryLight = Color(0xFF63B3ED);   
   static const Color accent = Color(0xFF4FD1C7);         // Teal
