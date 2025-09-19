@@ -1,16 +1,16 @@
-class Ticket  {
+class Ticket {
   final String id;
   final String userId;
   final String categoryId;
   final String title;
   final String description;
   final String? photo;
-  final String status; // pending, approved, rejected
+  final String status;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? adminNote;
 
-  Ticket ({
+  Ticket({
     required this.id,
     required this.userId,
     required this.categoryId,
@@ -23,8 +23,8 @@ class Ticket  {
     this.adminNote,
   });
 
-  factory Ticket .fromJson(Map<String, dynamic> json) {
-    return Ticket (
+  factory Ticket.fromJson(Map<String, dynamic> json) {
+    return Ticket(
       id: json['id'],
       userId: json['user_id'],
       categoryId: json['category_id'],
