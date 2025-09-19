@@ -43,7 +43,7 @@ class CustomBottomNav extends StatelessWidget {
               ),
               _buildNavItem(
                 icon: CupertinoIcons.doc_text_fill,
-                label: 'Submission',
+                label: 'Tickets',
                 index: 2,
                 isActive: currentIndex == 2,
               ),

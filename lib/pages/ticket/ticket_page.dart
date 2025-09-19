@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
-import '../../widgets/submission_history_card.dart';
-import 'add_submission_page.dart';
+import '../../widgets/ticket_history_card.dart';
+import 'add_ticket_page.dart';
 
-class SubmissionPage extends StatelessWidget {
-  const SubmissionPage({super.key});
+class TicketPage extends StatelessWidget {
+  const TicketPage({super.key});
 
   List<Map<String, dynamic>> _getMockSubmissions() {
     return [

@@ -14,7 +14,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _login() {
-    // Simple validation - replace with actual authentication
     if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
       Navigator.pushReplacement(
         context,
@@ -111,7 +110,7 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(
                 width: double.infinity,
                 child: CupertinoButton(
-                  color: CupertinoColors.white,
+                  color: AppTheme.primaryLight,
                   borderRadius: BorderRadius.circular(12),
                   onPressed: _login,
                   child: const Text(
@@ -120,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                       fontFamily: 'Montserrat',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      color: CupertinoColors.white,
                     ),
                   ),
                 ),
