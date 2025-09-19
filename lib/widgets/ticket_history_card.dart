@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../config/theme/theme.dart';
 
-class SubmissionHistoryCard extends StatelessWidget {
+class TicketHistoryCard extends StatelessWidget {
   final String title;
   final String category;
   final String date;
@@ -9,7 +9,7 @@ class SubmissionHistoryCard extends StatelessWidget {
   final String description;
   final VoidCallback? onTap;
 
-  const SubmissionHistoryCard({
+  const TicketHistoryCard({
     super.key,
     required this.title,
     required this.category,

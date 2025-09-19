@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 
-class AddSubmissionPage extends StatefulWidget {
-  const AddSubmissionPage({super.key});
+class AddTicketPage extends StatefulWidget {
+  const AddTicketPage({super.key});
 
   @override
-  State<AddSubmissionPage> createState() => _AddSubmissionPageState();
+  State<AddTicketPage> createState() => _AddTicketPageState();
 }
 
-class _AddSubmissionPageState extends State<AddSubmissionPage> {
+class _AddTicketPageState extends State<AddTicketPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String _selectedCategory = 'Umum';
