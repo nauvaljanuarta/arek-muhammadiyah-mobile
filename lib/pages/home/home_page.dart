@@ -246,15 +246,15 @@ class HomeContent extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(
-                  CupertinoIcons.star_circle_fill,
-                  color: AppTheme.primaryDark,
-                  size: 24,
+                Image.asset(
+                  'muhammadiyahlogo.png',
+                  width: 24,
+                  height: 24,
                 ),
-                SizedBox(width: 8),
-                Text(
+                const SizedBox(width: 8),
+                const Text(
                   'Muhammadiyah',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
