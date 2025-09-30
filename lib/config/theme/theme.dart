@@ -26,7 +26,7 @@ class AppTheme {
       navTitleTextStyle: TextStyle(
         fontFamily: 'Montserrat',
         color: CupertinoColors.white,
-        fontSize: 17,
+        fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
     ),
