@@ -74,50 +74,29 @@ class HomeContent extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20.0),
                 padding: const EdgeInsets.all(24.0),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primaryDark, AppTheme.primaryLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryDark.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Row(
                       children: [
-                        Icon(
-                          CupertinoIcons.sun_max_fill,
-                          color: CupertinoColors.white,
-                          size: 24,
-                        ),
-                        SizedBox(width: 8),
                         Text(
                           'Assalamu\'alaikum',
                           style: TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
-                            color: CupertinoColors.white,
+                            color: CupertinoColors.black,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Selamat datang di aplikasi Muhammadiyah\nSemoga hari Anda penuh berkah',
+                      'Selamat datang di aplikasi Muhammadiyah Semoga hari Anda penuh berkah',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 16,
-                        color: CupertinoColors.white.withOpacity(0.9),
+                        color: CupertinoColors.black.withValues(alpha: 0.9),
                         height: 1.4,
                       ),
                     ),
@@ -132,14 +111,8 @@ class HomeContent extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 20.0),
                 child: Row(
                   children: [
-                    Icon(
-                      CupertinoIcons.grid,
-                      color: AppTheme.primaryDark,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
                     Text(
-                      'Kategori',
+                      'Category',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 20,
@@ -228,16 +201,16 @@ class HomeContent extends StatelessWidget {
       left: 0,
       right: 0,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
         decoration: BoxDecoration(
-          color: CupertinoTheme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
+          color: CupertinoTheme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(25.0),
             bottomRight: Radius.circular(25.0),
           ),
           boxShadow: [
             BoxShadow(
-              color: CupertinoColors.systemGrey.withOpacity(0.1),
+              color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -249,11 +222,11 @@ class HomeContent extends StatelessWidget {
             Row(
               children: [
                 Image.asset(
-                  'muhammadiyahlogo.png',
-                  width: 24,
-                  height: 24,
+                  "assets/images/muhammadiyahlogo.png",
+                  width: 52,
+                  height: 52,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 const Text(
                   'Muhammadiyah',
                   style: TextStyle(
@@ -264,35 +237,6 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            GestureDetector(
-              onTap: () {
-                // Navigate to profile
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primaryDark, AppTheme.primaryLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryDark.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  CupertinoIcons.person_fill,
-                  size: 20,
-                  color: CupertinoColors.white,
-                ),
-              ),
             ),
           ],
         ),
@@ -338,7 +282,7 @@ class HomeContent extends StatelessWidget {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Color(int.parse('0xFF${category.color.substring(1)}')).withOpacity(0.15),
+                          color: Color(int.parse('0xFF${category.color.substring(1)}')).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Icon(
@@ -400,8 +344,8 @@ class HomeContent extends StatelessWidget {
               ),
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryLight.withOpacity(0.3),
-                  AppTheme.primaryDark.withOpacity(0.5),
+                  AppTheme.primaryLight.withValues(alpha: 0.3),
+                  AppTheme.primaryDark.withValues(alpha: 0.5),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -423,7 +367,7 @@ class HomeContent extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryLight.withOpacity(0.1),
+                    color: AppTheme.primaryLight.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -518,7 +462,7 @@ class HomeContent extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: CupertinoColors.systemGrey.withOpacity(0.08),
+                  color: CupertinoColors.systemGrey.withValues(alpha: 0.08),
                   blurRadius: 12,
                   offset: const Offset(0, 3),
                 ),
@@ -567,7 +511,7 @@ class HomeContent extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Color(int.parse('0xFF${category.color.substring(1)}')).withOpacity(0.1),
+                                color: Color(int.parse('0xFF${category.color.substring(1)}')).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
