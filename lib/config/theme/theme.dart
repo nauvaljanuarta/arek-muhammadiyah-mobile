@@ -12,7 +12,6 @@ class AppTheme {
   static const Color textPrimary = CupertinoColors.label;
   static const Color textSecondary = CupertinoColors.secondaryLabel;
 
-  // Theme
   static const CupertinoThemeData cupertinoTheme = CupertinoThemeData(
     primaryColor: primaryDark,
     scaffoldBackgroundColor: background,

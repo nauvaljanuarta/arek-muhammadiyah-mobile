@@ -24,7 +24,7 @@ class _SplashPageState extends State<SplashPage> {
             transitionDuration: const Duration(milliseconds: 600),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              const begin = Offset(0.0, 1.0); // Start from bottom
+              const begin = Offset(0.0, 1.0); 
               const end = Offset.zero;
               const curve = Curves.easeInOutCubic;
               var tween = Tween(begin: begin, end: end)
@@ -102,16 +102,16 @@ class _SplashContent extends StatelessWidget {
           )
               .animate()
               .fadeIn(
-                duration: 600.ms,
-                delay: 800.ms,
-                curve: Curves.easeOut,
+          duration: 600.ms,
+          delay: 800.ms,
+          curve: Curves.easeOut,
               )
               .slideX(
-                begin: 0.5,
-                end: 0,
-                duration: 700.ms,
-                delay: 800.ms,
-                curve: Curves.easeOutCubic,
+          begin: -1.0,
+          end: 0,
+          duration: 700.ms,
+          delay: 800.ms,
+          curve: Curves.easeOutCubic,
               ),
         ),
       ],
