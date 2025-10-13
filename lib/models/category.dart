@@ -1,8 +1,8 @@
 class Category {
-  final String id;
+  final int id;
   final String name;
   final String description;
-  final String icon;
+  final String icon; 
   final String color;
 
   Category({
@@ -15,11 +15,11 @@ class Category {
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      icon: json['icon'],
-      color: json['color'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'No Name',
+      description: json['description'] ?? '',
+      icon: json['icon'] ?? 'circle', 
+      color: json['color'] ?? '#10B981',
     );
   }
 

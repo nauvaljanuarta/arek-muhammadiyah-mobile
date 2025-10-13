@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../../data/dummy_data.dart';
 import '../../widgets/custom_bottom_nav.dart';
+import '../../widgets/home/category_list.dart';
 import '../news/news_page.dart';
 import '../ticket/ticket_page.dart';
 import '../profile/profile_page.dart';
@@ -125,7 +126,7 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(child: _buildCategoriesList()),
+            SliverToBoxAdapter(child: CategoriesList()),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
             SliverToBoxAdapter(child: _buildFeaturedArticle(context)),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -244,76 +245,6 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoriesList() {
-    final categories = DummyData.categories;
-
-    return SizedBox(
-      height: 100,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return Container(
-            width: 80,
-            margin: const EdgeInsets.only(right: 16),
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () {},
-              child: Column(
-                children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: CupertinoColors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: CupertinoColors.systemGrey.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Color(int.parse('0xFF${category.color.substring(1)}')).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(category.icon),
-                          color: Color(int.parse('0xFF${category.color.substring(1)}')),
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    category.name,
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 
   Widget _buildFeaturedArticle(BuildContext context) {
     final articles = DummyData.articles.take(5).toList();
@@ -568,18 +499,4 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  IconData _getCategoryIcon(String iconName) {
-    switch (iconName) {
-      case 'book':
-        return CupertinoIcons.book_fill;
-      case 'heart':
-        return CupertinoIcons.heart_fill;
-      case 'chart':
-        return CupertinoIcons.chart_bar_fill;
-      case 'mosque':
-        return CupertinoIcons.star_fill;
-      default:
-        return CupertinoIcons.circle_fill;
-    }
-  }
 }

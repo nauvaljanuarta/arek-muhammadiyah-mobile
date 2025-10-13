@@ -7,28 +7,28 @@ class DummyData {
   // Categories
   static final List<Category> categories = [
     Category(
-      id: '1',
+      id: 1,
       name: 'Pendidikan',
       description: 'Artikel seputar pendidikan dan pembelajaran',
       icon: 'book',
       color: '#4A90E2',
     ),
     Category(
-      id: '2',
+      id: 2,
       name: 'Kesehatan',
       description: 'Informasi kesehatan dan gaya hidup sehat',
       icon: 'heart',
       color: '#4FD1C7',
     ),
     Category(
-      id: '3',
+      id: 3,
       name: 'Ekonomi',
       description: 'Berita dan tips ekonomi syariah',
       icon: 'chart',
       color: '#9AE6B4',
     ),
     Category(
-      id: '4',
+      id: 4,
       name: 'Keagamaan',
       description: 'Kajian Islam dan kegiatan keagamaan',
       icon: 'mosque',
