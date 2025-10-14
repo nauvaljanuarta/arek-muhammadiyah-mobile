@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../config/theme/theme.dart';
+import '../../config/theme/theme.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;

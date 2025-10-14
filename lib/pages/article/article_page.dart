@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../../data/dummy_data.dart';
-import 'detail_news_page.dart';
+import 'detail_article_page.dart';
 
 class NewsPage extends StatelessWidget {
   const NewsPage({super.key});

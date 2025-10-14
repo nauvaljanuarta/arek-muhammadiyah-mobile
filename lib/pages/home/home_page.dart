@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../../data/dummy_data.dart';
-import '../../widgets/custom_bottom_nav.dart';
-import '../../widgets/home/category_list.dart';
-import '../news/news_page.dart';
+import '../article/article_page.dart';
 import '../ticket/ticket_page.dart';
 import '../profile/profile_page.dart';
-import '../news/detail_news_page.dart';
+import '../../widgets/core/custom_bottom_nav.dart';
+import '../../widgets/core/custom_app_bar.dart';
+import '../../widgets/home/category_list.dart';
+import '../../widgets/home/featured_article.dart';
+import '../../widgets/home/recent_article.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -128,7 +130,7 @@ class HomeContent extends StatelessWidget {
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(child: CategoriesList()),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            SliverToBoxAdapter(child: _buildFeaturedArticle(context)),
+            SliverToBoxAdapter(child: FeaturedArticle()),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
             // Recent Articles Header
             SliverToBoxAdapter(
@@ -187,316 +189,12 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            _buildRecentArticlesList(),
+            const RecentArticles(),
             const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         ),
-        _buildCustomAppBar(context, currentUser),
+        CustomAppBar(currentUser: currentUser),
       ],
     );
   }
-
-  Widget _buildCustomAppBar(BuildContext context, dynamic currentUser) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-        decoration: BoxDecoration(
-          color: CupertinoTheme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(25.0),
-            bottomRight: Radius.circular(25.0),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Image.asset(
-                  "assets/images/muhammadiyahlogo.png",
-                  width: 52,
-                  height: 52,
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Muhammadiyah',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  Widget _buildFeaturedArticle(BuildContext context) {
-    final articles = DummyData.articles.take(5).toList();
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: CupertinoColors.systemGrey.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primaryLight.withValues(alpha: 0.3),
-                  AppTheme.primaryDark.withValues(alpha: 0.5),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Center(
-              child: Icon(
-                CupertinoIcons.doc_text_fill,
-                size: 60,
-                color: CupertinoColors.white,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryLight.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    '🌟 Artikel Pilihan',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      color: AppTheme.primaryDark,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  articles.first.title,
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    color: AppTheme.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  articles.first.content,
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    color: AppTheme.textSecondary,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 16),
-                CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  color: AppTheme.primaryDark,
-                  borderRadius: BorderRadius.circular(25),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (context) => DetailNewsPage(article: articles.first),
-                      ),
-                    );
-                  },
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Baca Selengkapnya',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          color: CupertinoColors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(
-                        CupertinoIcons.arrow_right,
-                        size: 16,
-                        color: CupertinoColors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentArticlesList() {
-    final articles = DummyData.articles.take(5).toList();
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final article = articles[index];
-          final category = DummyData.getCategoryById(article.categoryId);
-          
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(
-              color: CupertinoColors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: CupertinoColors.systemGrey.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (context) => DetailNewsPage(article: article),
-                  ),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryLight.withOpacity(0.3),
-                            AppTheme.primaryDark.withOpacity(0.5),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.doc_text_fill,
-                        color: CupertinoColors.white,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (category != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Color(int.parse('0xFF${category.color.substring(1)}')).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                category.name,
-                                style: TextStyle(
-                                  fontFamily: 'Montserrat',
-                                  fontSize: 10,
-                                  color: Color(int.parse('0xFF${category.color.substring(1)}')),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 8),
-                          Text(
-                            article.title,
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            article.content,
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 12,
-                              color: AppTheme.textSecondary,
-                              height: 1.4,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      CupertinoIcons.chevron_right,
-                      color: AppTheme.textSecondary,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-        childCount: articles.length,
-      ),
-    );
-  }
-
 }
