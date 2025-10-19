@@ -84,7 +84,7 @@ class RecentArticles extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
+                            ),  
                           const SizedBox(height: 8),
                           Text(
                             article.title,

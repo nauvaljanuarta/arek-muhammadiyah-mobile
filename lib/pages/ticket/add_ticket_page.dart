@@ -186,12 +186,12 @@ class _AddTicketPageState extends State<AddTicketPage> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppTheme.primaryDark,
+        backgroundColor: AppTheme.background,
         middle: const Text(
           'Buat Pengajuan',
           style: TextStyle(
             fontFamily: 'Montserrat',
-            color: CupertinoColors.white,
+            color: CupertinoColors.black,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -200,7 +200,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
           onPressed: () => Navigator.pop(context),
           child: const Icon(
             CupertinoIcons.back,
-            color: CupertinoColors.white,
+            color: AppTheme.primaryDark,
           ),
         ),
       ),
@@ -300,12 +300,12 @@ class _AddTicketPageState extends State<AddTicketPage> {
                           style: const TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 16,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
                         const Icon(
                           CupertinoIcons.chevron_down,
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.background,
                           size: 16,
                         ),
                       ],
@@ -386,6 +386,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                         fontFamily: 'Montserrat',
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: CupertinoColors.white
                       ),
                     ),
                   ),

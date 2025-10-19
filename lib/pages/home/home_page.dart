@@ -80,27 +80,39 @@ class HomeContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Text(
+                        Container(
+                          width: 4,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryDark,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
                           'Assalamu\'alaikum',
                           style: TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: CupertinoColors.black,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
-                      'Selamat datang di aplikasi Muhammadiyah Semoga hari Anda penuh berkah',
+                      'Selamat datang di aplikasi Muhammadiyah. Semoga hari Anda penuh berkah',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
-                        fontSize: 16,
-                        color: CupertinoColors.black.withValues(alpha: 0.9),
-                        height: 1.4,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: CupertinoColors.black.withValues(alpha: 0.7),
+                        height: 1.5,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ],
