@@ -1,9 +1,47 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import '../../config/theme/theme.dart';
+import '../../models/user.dart';
+import '../../services/user_service.dart';
 import '../auth/login_page.dart';
+import '../profile/edit_profile_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  User? _user;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      if (UserService.currentUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final user = await UserService.getUserById(
+        UserService.currentUser!.id.toString(),
+      );
+      setState(() {
+        _user = user;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error load user: $e');
+      setState(() => _isLoading = false);
+    }
+  }
 
   void _logout(BuildContext context) {
     showCupertinoDialog(
@@ -20,7 +58,7 @@ class ProfilePage extends StatelessWidget {
             isDestructiveAction: true,
             child: const Text('Keluar'),
             onPressed: () {
-              Navigator.pop(context);
+              UserService.currentUser = null;
               Navigator.pushAndRemoveUntil(
                 context,
                 CupertinoPageRoute(builder: (context) => const LoginPage()),
@@ -35,148 +73,123 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('Profil'),
+      ),
+      child: SafeArea(
+        child: _isLoading
+            ? const Center(child: CupertinoActivityIndicator())
+            : _user == null
+                ? const Center(
+                    child: Text(
+                      "Gagal memuat data pengguna",
+                      style: TextStyle(fontFamily: 'Montserrat'),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              _buildHeader(),
+                              const SizedBox(height: 24),
+                              _buildProfileSection(
+                                title: 'Akun',
+                                items: [
+                                  _ProfileItem(
+                                    icon: CupertinoIcons.person_circle,
+                                    title: 'Edit Profil',
+                                    color: AppTheme.primaryMedium,
+                                    onTap: () async {
+                                      final updated = await Navigator.push(
+                                        context,
+                                        CupertinoPageRoute(
+                                          builder: (_) =>
+                                              EditProfilePage(user: _user!),
+                                        ),
+                                      );
+                                      if (updated == true) _loadUserData();
+                                    },
+                                  ),
+                                  _ProfileItem(
+                                    icon: CupertinoIcons.lock_circle,
+                                    title: 'Ubah Password',
+                                    color: AppTheme.accent,
+                                    onTap: () {},
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              _buildProfileSection(
+                                title: 'Lainnya',
+                                items: [
+                                  _ProfileItem(
+                                    icon:
+                                        CupertinoIcons.square_arrow_right_fill,
+                                    title: 'Keluar',
+                                    color: CupertinoColors.systemRed,
+                                    onTap: () => _logout(context),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 80), // ✅ ruang untuk bottom nav
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppTheme.primaryDark, AppTheme.primaryMedium],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         children: [
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryDark, AppTheme.primaryMedium],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
+            width: 80,
+            height: 80,
+            decoration: const BoxDecoration(
+              color: CupertinoColors.white,
+              shape: BoxShape.circle,
             ),
-            child: Column(
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: const BoxDecoration(
-                    color: CupertinoColors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.person_fill,
-                    size: 40,
-                    color: AppTheme.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Ahmad Fauzi',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'ahmad.fauzi@muhammadiyah.org',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 14,
-                    color: CupertinoColors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Member Aktif',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 12,
-                      color: CupertinoColors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+            child: const Icon(
+              CupertinoIcons.person_fill,
+              size: 40,
+              color: AppTheme.primaryDark,
             ),
           ),
-          const SizedBox(height: 24),
-          _buildProfileSection(
-            title: 'Akun',
-            items: [
-              _ProfileItem(
-                icon: CupertinoIcons.person_circle,
-                title: 'Edit Profile',
-                color: AppTheme.primaryMedium,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: CupertinoIcons.lock_circle,
-                title: 'Ubah Password',
-                color: AppTheme.accent,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: CupertinoIcons.bell_circle,
-                title: 'Notifikasi',
-                color: AppTheme.lightAccent,
-                onTap: () {},
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
-          _buildProfileSection(
-            title: 'Aplikasi',
-            items: [
-              _ProfileItem(
-                icon: CupertinoIcons.settings,
-                title: 'Pengaturan',
-                color: AppTheme.primaryLight,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: CupertinoIcons.question_circle,
-                title: 'Bantuan',
-                color: AppTheme.primaryMedium,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: CupertinoIcons.info_circle,
-                title: 'Tentang Aplikasi',
-                color: AppTheme.accent,
-                onTap: () {},
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildProfileSection(
-            title: 'Lainnya',
-            items: [
-              _ProfileItem(
-                icon: CupertinoIcons.star_circle,
-                title: 'Beri Rating',
-                color: AppTheme.lightAccent,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: CupertinoIcons.square_arrow_right,
-                title: 'Keluar',
-                color: CupertinoColors.systemRed,
-                onTap: () => _logout(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
           Text(
-            'Versi 1.0.0',
-            style: TextStyle(
+            _user?.name ?? '-',
+            style: const TextStyle(
               fontFamily: 'Montserrat',
-              fontSize: 12,
-              color: AppTheme.textSecondary,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: CupertinoColors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _user?.nik ?? '-',
+            style: const TextStyle(
+              fontFamily: 'Montserrat',
+              fontSize: 14,
+              color: CupertinoColors.white,
             ),
           ),
         ],
@@ -220,7 +233,7 @@ class ProfilePage extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isLast = index == items.length - 1;
-              
+
               return Column(
                 children: [
                   CupertinoButton(

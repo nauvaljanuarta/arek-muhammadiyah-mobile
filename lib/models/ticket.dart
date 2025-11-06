@@ -1,55 +1,61 @@
+import 'enums.dart';
+
 class Ticket {
   final String id;
   final String userId;
-  final String categoryId;
+  final String? categoryId;
+  final String? categoryName;
   final String title;
   final String description;
-  final String? photo;
-  final String status;
+  final TicketStatus status;
+  final String? resolution;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final String? adminNote;
+  final DateTime? resolvedAt;
 
   Ticket({
     required this.id,
     required this.userId,
-    required this.categoryId,
+    this.categoryId,
+    this.categoryName,
     required this.title,
     required this.description,
-    this.photo,
     required this.status,
+    this.resolution,
     required this.createdAt,
     this.updatedAt,
-    this.adminNote,
+    this.resolvedAt,
   });
 
-  factory Ticket.fromJson(Map<String, dynamic> json) {
-    return Ticket(
-      id: json['id'],
-      userId: json['user_id'],
-      categoryId: json['category_id'],
-      title: json['title'],
-      description: json['description'],
-      photo: json['photo'],
-      status: json['status'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
-      adminNote: json['admin_note'],
-    );
-  }
+  factory Ticket.fromJson(Map<String, dynamic> json) => Ticket(
+        id: json['id'].toString(),
+        userId: json['user_id'].toString(),
+        categoryId: json['category_id']?.toString(),
+        categoryName: json['category_name'],
+        title: json['title'],
+        description: json['description'],
+        status: ticketStatusFromString(json['status']),
+        resolution: json['resolution'],
+        createdAt: DateTime.parse(json['created_at']),
+        updatedAt: json['updated_at'] != null
+            ? DateTime.parse(json['updated_at'])
+            : null,
+        resolvedAt: json['resolved_at'] != null
+            ? DateTime.parse(json['resolved_at'])
+            : null,
+      );
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_id': userId,
-      'category_id': categoryId,
-      'title': title,
-      'description': description,
-      'photo': photo,
-      'status': status,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-      'admin_note': adminNote,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user_id': userId,
+        'category_id': categoryId,
+        'category_name': categoryName,
+        'title': title,
+        'description': description,
+        'status': ticketStatusToString(status),
+        'resolution': resolution,
+        'created_at': createdAt.toIso8601String(),
+        'updated_at': updatedAt?.toIso8601String(),
+        'resolved_at': resolvedAt?.toIso8601String(),
+      };
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../home/home_page.dart';
+import '/services/user_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,46 +24,68 @@ class _LoginPageState extends State<LoginPage> {
     'assets/images/carrousel3.jpg',
   ];
 
-@override
-void initState() {
-  super.initState();
-  _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-    if (_pageController.hasClients) {
-      if (_currentPage < _carouselImages.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0; // balik ke slide pertama
-      }
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    }
-  });
-}
+  bool _loading = false;
 
-  void _login() {
-    if (_usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        CupertinoPageRoute(builder: (context) => const HomePage()),
-      );
-    } else {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: const Text('Please fill in all fields'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('Ok'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      );
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_pageController.hasClients) {
+        if (_currentPage < _carouselImages.length - 1) {
+          _currentPage++;
+        } else {
+          _currentPage = 0; 
+        }
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+    Future<void> _login() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showError('Please fill in all fields');
+      return;
     }
+
+    setState(() => _loading = true);
+
+    try {
+      final success = await UserService.login(
+        id: _usernameController.text,
+        password: _passwordController.text,
+      );
+
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          CupertinoPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  void _showError(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (_) => CupertinoAlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('Ok'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -73,27 +96,26 @@ void initState() {
       backgroundColor: AppTheme.background,
       child: Stack(
         children: [
+          // Carousel
           SizedBox(
             height: screenHeight,
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
+                setState(() => _currentPage = index);
               },
               itemCount: _carouselImages.length,
               itemBuilder: (context, index) {
                 return Image.asset(
                   _carouselImages[index],
                   fit: BoxFit.cover,
-                    width: MediaQuery.of(context).size.width,
-                    height: screenHeight * 0.25,
+                  width: MediaQuery.of(context).size.width,
+                  height: screenHeight * 0.25,
                 );
               },
             ),
           ),
-          
+          // Page indicator
           Positioned(
             top: 60,
             left: 0,
@@ -109,14 +131,14 @@ void initState() {
                   decoration: BoxDecoration(
                     color: _currentPage == index
                         ? CupertinoColors.white
-                        : CupertinoColors.white.withValues(alpha: 0.4),
+                        : CupertinoColors.white.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
             ),
           ),
-          
+          // Login Form
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -129,7 +151,7 @@ void initState() {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: CupertinoColors.black.withValues(alpha: 0.2),
+                    color: CupertinoColors.black.withOpacity(0.2),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -143,10 +165,11 @@ void initState() {
                       Container(
                         width: 40,
                         decoration: BoxDecoration(
-                          color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                          color: AppTheme.textSecondary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
+                      const SizedBox(height: 16),
                       SizedBox(
                         width: 200,
                         height: 200,
@@ -155,7 +178,6 @@ void initState() {
                           fit: BoxFit.contain,
                         ),
                       ),
-                      
                       const Text(
                         'Welcome Back',
                         style: TextStyle(
@@ -175,25 +197,20 @@ void initState() {
                         ),
                       ),
                       const SizedBox(height: 40),
-                      
                       CupertinoTextField(
                         controller: _usernameController,
                         placeholder: 'NIK',
-                        keyboardType: TextInputType.name,
+                        keyboardType: TextInputType.text,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppTheme.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppTheme.textSecondary.withValues(alpha: 0.1),
+                            color: AppTheme.textSecondary.withOpacity(0.1),
                           ),
-                        ),
-                        style: const TextStyle(
-                          fontFamily: 'Montserrat',
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
                       CupertinoTextField(
                         controller: _passwordController,
                         placeholder: 'Password',
@@ -206,32 +223,29 @@ void initState() {
                             color: AppTheme.textSecondary.withOpacity(0.1),
                           ),
                         ),
-                        style: const TextStyle(
-                          fontFamily: 'Montserrat',
-                        ),
                       ),
                       const SizedBox(height: 24),
-                      
                       SizedBox(
                         width: double.infinity,
                         height: 54,
                         child: CupertinoButton(
                           color: AppTheme.primaryDark,
                           borderRadius: BorderRadius.circular(12),
-                          onPressed: _login,
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: CupertinoColors.white,
-                            ),
-                          ),
+                          onPressed: _loading ? null : _login,
+                          child: _loading
+                              ? const CupertinoActivityIndicator()
+                              : const Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    fontFamily: 'Montserrat',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: CupertinoColors.white,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
                       CupertinoButton(
                         onPressed: () {},
                         child: Text(

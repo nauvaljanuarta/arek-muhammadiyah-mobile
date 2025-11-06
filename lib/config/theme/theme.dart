@@ -18,16 +18,23 @@ class AppTheme {
     barBackgroundColor: primaryDark,
     textTheme: CupertinoTextThemeData(
       textStyle: TextStyle(
+        inherit: false,
         fontFamily: 'Montserrat',
         fontSize: 16,
         color: textPrimary,
       ),
       navTitleTextStyle: TextStyle(
+        inherit: false,
         fontFamily: 'Montserrat',
-        color: CupertinoColors.white,
+        color: textPrimary,
         fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
+      actionTextStyle: TextStyle(
+        inherit: false,
+      fontFamily: 'Montserrat',
+      color: accent,
+    ),
     ),
   );
 }

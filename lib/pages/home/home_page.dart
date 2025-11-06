@@ -1,8 +1,11 @@
+import 'package:MuhammadiyahApp/pages/ticket/add_ticket_page.dart';
+import 'package:MuhammadiyahApp/services/ticket_service.dart';
+import 'package:MuhammadiyahApp/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
-import '../../data/dummy_data.dart';
 import '../article/article_page.dart';
 import '../ticket/ticket_page.dart';
+import '../ticket/add_ticket_page.dart';
 import '../profile/profile_page.dart';
 import '../../widgets/core/custom_bottom_nav.dart';
 import '../../widgets/core/custom_app_bar.dart';
@@ -12,6 +15,7 @@ import '../../widgets/home/recent_article.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+  
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -22,7 +26,8 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const HomeContent(),
-    const NewsPage(),
+    const ArticlePage(),
+    AddTicketPage(ticketService: TicketService()),
     const TicketPage(),
     const ProfilePage(),
   ];
@@ -59,7 +64,7 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = DummyData.users.first;
+    final currentUser = UserService.currentUser;
 
     return Stack(
       children: [

@@ -36,6 +36,8 @@ dependencies:
   animated_splash_screen: ^1.3.0
   http: ^1.5.0
   video_player: ^2.10.0
+  shared_preferences: ^2.5.3
+
   
 
 dev_dependencies:
@@ -67,6 +69,7 @@ flutter:
       fonts:
         - asset: assets/fonts/Montserrat-Medium.ttf
         - asset: assets/fonts/Montserrat-Regular.ttf
+          weight: 500
         - asset: assets/fonts/Montserrat-MediumItalic.ttf
           style: italic
   # For details regarding fonts from package dependencies,

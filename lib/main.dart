@@ -1,21 +1,31 @@
 import 'package:flutter/cupertino.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'config/theme/theme.dart';
 import 'pages/splash/splash_page.dart';
+import 'pages/home/home_page.dart'; // misal ada HomePage
+import 'services/user_service.dart';
 
-void main() {
-  runApp(const MuhammadiyahApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+  await UserService.loadUserFromStorage();
+
+  runApp(MuhammadiyahApp(isLoggedIn: isLoggedIn));
 }
 
 class MuhammadiyahApp extends StatelessWidget {
-  const MuhammadiyahApp({super.key});
+  final bool isLoggedIn;
+  const MuhammadiyahApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
-    return const CupertinoApp(
+    return CupertinoApp(
       debugShowCheckedModeBanner: false,
       title: 'Muhammadiyah App',
       theme: AppTheme.cupertinoTheme,
-      home: SplashPage(), 
+      home: isLoggedIn ? const HomePage() : const SplashPage(),
     );
   }
 }
