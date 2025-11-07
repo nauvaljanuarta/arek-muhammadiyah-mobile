@@ -8,12 +8,12 @@ class UserService {
   static User? currentUser;
 
   static Future<bool> login({
-    required String id,
+    required String telp,
     required String password,
   }) async {
     final response = await _client.post(
       '/auth/login',
-      body: {'id': id, 'password': password},
+      body: {'telp': telp, 'password': password},
       withAuth: false,
     );
 
