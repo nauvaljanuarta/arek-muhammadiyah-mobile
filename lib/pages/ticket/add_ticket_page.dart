@@ -3,12 +3,9 @@ import '../../config/theme/theme.dart';
 import '../../models/category.dart';
 import '../../services/ticket_service.dart';
 import '../../services/category_service.dart';
-import '../../widgets/core/custom_bottom_nav.dart'; 
 
 class AddTicketPage extends StatefulWidget {
-  final TicketService ticketService;
-
-  const AddTicketPage({super.key, required this.ticketService});
+  const AddTicketPage({super.key});
 
   @override
   State<AddTicketPage> createState() => _AddTicketPageState();
@@ -41,19 +38,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
       });
     } catch (e) {
       setState(() => _loadingCategories = false);
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Gagal Memuat Kategori'),
-          content: Text('Terjadi kesalahan: $e'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      );
+      _showDialog('Gagal Memuat Kategori', 'Terjadi kesalahan: $e');
     }
   }
 
@@ -61,62 +46,48 @@ class _AddTicketPageState extends State<AddTicketPage> {
     if (_titleController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
         _selectedCategory == null) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => const CupertinoAlertDialog(
-          title: Text('Peringatan'),
-          content: Text('Mohon lengkapi semua field yang diperlukan'),
-          actions: [
-            CupertinoDialogAction(child: Text('OK')),
-          ],
-        ),
-      );
+      _showDialog('Peringatan', 'Mohon lengkapi semua field yang diperlukan');
       return;
     }
 
     setState(() => _isSubmitting = true);
 
     try {
-      await widget.ticketService.createTicket(
+      await TicketService.createTicket(
         title: _titleController.text,
         description: _descriptionController.text,
         categoryId: _selectedCategory!.id.toString(),
       );
 
       setState(() => _isSubmitting = false);
-
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Berhasil'),
-          content: const Text('Pengajuan Anda berhasil dikirim!'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+      _showDialog(
+        'Berhasil',
+        'Pengajuan Anda berhasil dikirim!',
+        onOk: () {
+          Navigator.pop(context); // tutup dialog
+          Navigator.pop(context, true); // kembali ke halaman sebelumnya
+        },
       );
     } catch (e) {
       setState(() => _isSubmitting = false);
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Gagal'),
-          content: Text('Terjadi kesalahan: $e'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      );
+      _showDialog('Gagal', 'Terjadi kesalahan: $e');
     }
+  }
+
+  void _showDialog(String title, String message, {VoidCallback? onOk}) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: onOk ?? () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCategoryPicker() {
@@ -165,15 +136,17 @@ class _AddTicketPageState extends State<AddTicketPage> {
                   setState(() => _selectedCategory = _categories[index]);
                 },
                 children: _categories
-                    .map((c) => Center(
-                          child: Text(
-                            c.name,
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 16,
-                            ),
+                    .map(
+                      (c) => Center(
+                        child: Text(
+                          c.name,
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 16,
                           ),
-                        ))
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -243,107 +216,95 @@ class _AddTicketPageState extends State<AddTicketPage> {
           ),
         ),
       ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 70),
-              child: _loadingCategories
-                  ? const Center(child: CupertinoActivityIndicator())
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
+      child: _loadingCategories
+          ? const Center(child: CupertinoActivityIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _buildFormField(
+                    label: 'Judul Pengajuan *',
+                    controller: _titleController,
+                    placeholder: 'Masukkan judul pengajuan',
+                  ),
+                  const SizedBox(height: 16),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Kategori *',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: _showCategoryPicker,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildFormField(
-                            label: 'Judul Pengajuan *',
-                            controller: _titleController,
-                            placeholder: 'Masukkan judul pengajuan',
-                          ),
-                          const SizedBox(height: 16),
-
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Kategori *',
-                              style: TextStyle(
-                                fontFamily: 'Montserrat',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
-                              ),
+                          Text(
+                            _selectedCategory?.name ?? 'Pilih kategori',
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 16,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: 8),
-
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: CupertinoButton(
-                              padding: EdgeInsets.zero,
-                              onPressed: _showCategoryPicker,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _selectedCategory?.name ?? 'Pilih kategori',
-                                    style: const TextStyle(
-                                      fontFamily: 'Montserrat',
-                                      fontSize: 16,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                  ),
-                                  const Icon(
-                                    CupertinoIcons.chevron_down,
-                                    color: AppTheme.background,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          _buildFormField(
-                            label: 'Deskripsi *',
-                            controller: _descriptionController,
-                            placeholder: 'Jelaskan detail pengajuan Anda',
-                            maxLines: 5,
-                          ),
-                          const SizedBox(height: 32),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: CupertinoButton(
-                              color: AppTheme.primaryDark,
-                              borderRadius: BorderRadius.circular(12),
-                              onPressed: _isSubmitting ? null : _submitForm,
-                              child: _isSubmitting
-                                  ? const CupertinoActivityIndicator(
-                                      color: CupertinoColors.white)
-                                  : const Text(
-                                      'Kirim Pengajuan',
-                                      style: TextStyle(
-                                        fontFamily: 'Montserrat',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: CupertinoColors.white,
-                                      ),
-                                    ),
-                            ),
+                          const Icon(
+                            CupertinoIcons.chevron_down,
+                            color: AppTheme.background,
+                            size: 16,
                           ),
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFormField(
+                    label: 'Deskripsi *',
+                    controller: _descriptionController,
+                    placeholder: 'Jelaskan detail pengajuan Anda',
+                    maxLines: 5,
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton(
+                      color: AppTheme.primaryDark,
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: _isSubmitting ? null : _submitForm,
+                      child: _isSubmitting
+                          ? const CupertinoActivityIndicator(
+                              color: CupertinoColors.white,
+                            )
+                          : const Text(
+                              'Kirim Pengajuan',
+                              style: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: CupertinoColors.white,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 

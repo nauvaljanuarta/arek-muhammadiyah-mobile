@@ -1,11 +1,9 @@
 import 'package:MuhammadiyahApp/pages/ticket/add_ticket_page.dart';
-import 'package:MuhammadiyahApp/services/ticket_service.dart';
 import 'package:MuhammadiyahApp/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../article/article_page.dart';
 import '../ticket/ticket_page.dart';
-import '../ticket/add_ticket_page.dart';
 import '../profile/profile_page.dart';
 import '../../widgets/core/custom_bottom_nav.dart';
 import '../../widgets/core/custom_app_bar.dart';
@@ -16,7 +14,6 @@ import '../../widgets/home/recent_article.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -27,7 +24,6 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const HomeContent(),
     const ArticlePage(),
-    AddTicketPage(ticketService: TicketService()),
     const TicketPage(),
     const ProfilePage(),
   ];
@@ -38,7 +34,10 @@ class _HomePageState extends State<HomePage> {
       child: SafeArea(
         child: Stack(
           children: [
-            _pages[_currentIndex],
+            Padding(
+              padding: const EdgeInsets.only(bottom: 80),
+              child: _pages[_currentIndex],
+            ),
             Positioned(
               bottom: 0,
               left: 0,
@@ -49,6 +48,14 @@ class _HomePageState extends State<HomePage> {
                   setState(() {
                     _currentIndex = index;
                   });
+                },
+                onAddTicketPressed: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (context) => AddTicketPage(
+                      ),
+                    ),
+                  );
                 },
               ),
             ),
@@ -77,7 +84,6 @@ class HomeContent extends StatelessWidget {
               },
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
-            // Greeting Section
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -125,7 +131,13 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            // Categories Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: FeaturedArticle(),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.0),
@@ -147,9 +159,6 @@ class HomeContent extends StatelessWidget {
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(child: CategoriesList()),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            SliverToBoxAdapter(child: FeaturedArticle()),
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            // Recent Articles Header
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),

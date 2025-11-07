@@ -1,116 +1,215 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:io';
 import '../models/ticket.dart';
-import 'user_service.dart';
-import '../config/connection/db.dart';
+import '../models/document.dart';
+import '../services/api_client.dart';
+import '../services/user_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
 class TicketService {
-  final String baseUrl;
+  static final ApiClient _client = ApiClient();
 
-  /// Konstruktor default menggunakan baseUrl dari Connection
-  TicketService({String? baseUrl})
-      : baseUrl = baseUrl ?? Connection.baseUrl;
+  // ========== GET METHODS ==========
 
-  /// Ambil semua ticket user
-  Future<List<Ticket>> getUserTickets({
+  static Future<List<Ticket>> getUserTickets({
     int page = 1,
     int limit = 20,
   }) async {
-    final currentUser = UserService.currentUser;
-    if (currentUser == null) return [];
+    final user = UserService.currentUser;
+    if (user == null) throw Exception('User not logged in');
 
-    final userId = currentUser.id;
+    final response = await _client.get(
+      '/tickets/my?page=$page&limit=$limit', // ✅ FIXED ENDPOINT
+    );
 
-    final url = Uri.parse('$baseUrl/tickets?user_id=$userId&page=$page&limit=$limit');
-
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List ticketsJson = data['tickets'] ?? [];
-      return ticketsJson.map((json) => Ticket.fromJson(json)).toList();
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      final List tickets = data['data'] ?? [];
+      return tickets.map((e) => Ticket.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load tickets');
+      throw Exception(data['message'] ?? 'Failed to fetch tickets');
     }
   }
 
-  /// Ambil detail ticket
-  Future<Ticket> getTicketById(String id) async {
-    final url = Uri.parse('$baseUrl/tickets/$id');
-    final response = await http.get(url);
+  static Future<Ticket> getTicketById(String id) async {
+    final response = await _client.get('/tickets/$id'); 
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      return Ticket.fromJson(jsonDecode(response.body));
+    if (response.statusCode == 200 && data['success'] == true) {
+      return Ticket.fromJson(data['data']);
     } else {
-      throw Exception('Failed to load ticket');
+      throw Exception(data['message'] ?? 'Failed to load ticket');
     }
   }
 
-  /// Buat ticket baru
-  Future<Ticket> createTicket({
+
+  static Future<Ticket> createTicket({
     required String title,
     required String description,
     String? categoryId,
+    List<File> files = const [], 
   }) async {
-    final currentUser = UserService.currentUser;
-    if (currentUser == null) throw Exception('User not logged in');
+    final user = UserService.currentUser;
+    if (user == null) throw Exception('User not logged in');
 
-    final url = Uri.parse('$baseUrl/tickets');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'user_id': currentUser.id,
-        'title': title,
-        'description': description,
-        'category_id': categoryId,
-      }),
+    return _createTicketMultipart(
+      title: title,
+      description: description,
+      categoryId: categoryId,
+      files: files,
+      userId: user.id.toString(),
+    );
+  }
+
+  static Future<Ticket> _createTicketMultipart({
+    required String title,
+    required String description,
+    required String userId,
+    String? categoryId,
+    required List<File> files,
+  }) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${_client.baseUrl}/tickets'), 
     );
 
-    if (response.statusCode == 201) {
-      return Ticket.fromJson(jsonDecode(response.body));
+    // Add headers
+    final headers = await _client.getHeaders();
+    request.headers.addAll(headers);
+
+    // Add fields (SELALU kirim sebagai form-data)
+    request.fields['title'] = title;
+    request.fields['description'] = description;
+    if (categoryId != null) {
+      request.fields['category_id'] = categoryId;
+    }
+
+    // Add files jika ada
+    for (var file in files) {
+      var multipartFile = await http.MultipartFile.fromPath(
+        'documents',
+        file.path,
+        contentType: _getMediaType(file.path),
+      );
+      request.files.add(multipartFile);
+    }
+
+    // Send request
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+    var data = jsonDecode(response.body);
+
+    if (response.statusCode == 201 && data['success'] == true) {
+      return Ticket.fromJson(data['data']);
     } else {
-      throw Exception('Failed to create ticket');
+      throw Exception(data['message'] ?? 'Failed to create ticket');
     }
   }
 
-  /// Update ticket
-  Future<Ticket> updateTicket({
-  required String id,
-  String? title,
-  String? description,
-  String? categoryId,
-  String? status,
-  String? resolution,
-}) async {
-  final url = Uri.parse('$baseUrl/tickets/$id');
-  final response = await http.put(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
+
+  static Future<List<Document>> uploadFilesToTicket({
+    required String ticketId,
+    required List<File> files,
+  }) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${_client.baseUrl}/tickets/$ticketId/upload-files'), 
+    );
+
+    final headers = await _client.getHeaders();
+    request.headers.addAll(headers);
+
+    for (var file in files) {
+      var multipartFile = await http.MultipartFile.fromPath(
+        'documents',
+        file.path,
+        contentType: _getMediaType(file.path),
+      );
+      request.files.add(multipartFile);
+    }
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+    var data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      final List documents = data['data'] ?? [];
+      return documents.map((e) => Document.fromJson(e)).toList();
+    } else {
+      throw Exception(data['message'] ?? 'Failed to upload files');
+    }
+  }
+
+  static Future<List<Document>> getTicketFiles(String ticketId) async {
+    final response = await _client.get('/tickets/$ticketId/files'); 
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      final List documents = data['data'] ?? [];
+      return documents.map((e) => Document.fromJson(e)).toList();
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch ticket files');
+    }
+  }
+
+  static Future<bool> deleteFile(String ticketId, String fileId) async {
+    final response = await _client.delete('/tickets/$ticketId/files/$fileId'); 
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return true;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to delete file');
+    }
+  }
+
+  static Future<Ticket> updateTicket(
+    String id, {
+    String? title,
+    String? description,
+    String? categoryId,
+    String? status,
+    String? resolution,
+  }) async {
+    final body = {
       if (title != null) 'title': title,
       if (description != null) 'description': description,
       if (categoryId != null) 'category_id': categoryId,
       if (status != null) 'status': status,
       if (resolution != null) 'resolution': resolution,
-    }),
-  );
+    };
 
-  if (response.statusCode == 200) {
-    return Ticket.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to update ticket');
-  }
-}
+    final response = await _client.put('/tickets/$id', body: body); 
+    final data = jsonDecode(response.body);
 
-
-  /// Hapus ticket
-  Future<void> deleteTicket(String id) async {
-    final url = Uri.parse('$baseUrl/tickets/$id');
-    final response = await http.delete(url);
-
-    if (response.statusCode != 204) {
-      throw Exception('Failed to delete ticket');
+    if (response.statusCode == 200 && data['success'] == true) {
+      return Ticket.fromJson(data['data']);
+    } else {
+      throw Exception(data['message'] ?? 'Failed to update ticket');
     }
   }
+
+  static Future<bool> deleteTicket(String id) async {
+    final response = await _client.delete('/tickets/$id'); 
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return true;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to delete ticket');
+    }
+  }
+
+
+  static MediaType? _getMediaType(String filePath) {
+    final mimeType = lookupMimeType(filePath);
+    if (mimeType != null) {
+      return MediaType.parse(mimeType);
+    }
+    return null;
+  }
+
+
 }

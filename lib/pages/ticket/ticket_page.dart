@@ -15,8 +15,6 @@ class TicketPage extends StatefulWidget {
 }
 
 class _TicketPageState extends State<TicketPage> {
-  late final TicketService ticketService;
-  late final String currentUserId;
   List<ticket_model.Ticket> userTickets = [];
   bool isLoading = true;
   String? errorMessage;
@@ -24,22 +22,7 @@ class _TicketPageState extends State<TicketPage> {
   @override
   void initState() {
     super.initState();
-    
-    // Initialize ticket service
-    ticketService = TicketService();
-    
-    // Get current user
-    final currentUser = UserService.currentUser;
-    if (currentUser != null) {
-      currentUserId = currentUser.id.toString();
-      _loadUserTickets();
-    } else {
-      currentUserId = '';
-      setState(() {
-        isLoading = false;
-        errorMessage = 'User not logged in';
-      });
-    }
+    _loadUserTickets();
   }
 
   Future<void> _loadUserTickets() async {
@@ -48,9 +31,10 @@ class _TicketPageState extends State<TicketPage> {
         isLoading = true;
         errorMessage = null;
       });
-      
-      final tickets = await ticketService.getUserTickets();
-      
+
+      // Gunakan static method dari TicketService
+      final tickets = await TicketService.getUserTickets();
+
       setState(() {
         userTickets = tickets;
         isLoading = false;
@@ -138,12 +122,10 @@ class _TicketPageState extends State<TicketPage> {
                         final result = await Navigator.push(
                           context,
                           CupertinoPageRoute(
-                            builder: (_) => AddTicketPage(
-                              ticketService: ticketService,
-                            ),
+                            builder: (_) => const AddTicketPage(),
                           ),
                         );
-                        
+
                         // Refresh tickets if a new ticket was created
                         if (result == true) {
                           _refreshTickets();
@@ -210,7 +192,7 @@ class _TicketPageState extends State<TicketPage> {
                 ),
               ),
             )
-          
+
           // Error State
           else if (errorMessage != null)
             SliverToBoxAdapter(
@@ -258,7 +240,7 @@ class _TicketPageState extends State<TicketPage> {
                 ),
               ),
             )
-          
+
           // Empty State
           else if (userTickets.isEmpty)
             SliverToBoxAdapter(
@@ -310,6 +292,8 @@ class _TicketPageState extends State<TicketPage> {
                 ),
               ),
             )
+
+          // Tickets List
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
@@ -318,20 +302,22 @@ class _TicketPageState extends State<TicketPage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: TicketCard(
-                      ticketService: ticketService,
                       ticket: ticket,
                       onTap: () async {
                         final result = await Navigator.push(
                           context,
                           CupertinoPageRoute(
                             builder: (context) => TicketDetailPage(
-                              ticket: ticket
+                              ticket: ticket,
                             ),
                           ),
                         );
-                        
-                        if (result == true) {
-                          _refreshTickets();
+
+                        // Jika ada updated ticket dari detail page, update di list
+                        if (result != null && result is ticket_model.Ticket) {
+                          setState(() {
+                            userTickets[index] = result;
+                          });
                         }
                       },
                     ),

@@ -7,9 +7,9 @@ import '../../services/category_service.dart';
 import '../../services/ticket_service.dart';
 
 class TicketDetailPage extends StatefulWidget {
-  Ticket ticket;
+  final Ticket ticket; 
 
-  TicketDetailPage({
+  const TicketDetailPage({
     super.key,
     required this.ticket,
   });
@@ -19,8 +19,6 @@ class TicketDetailPage extends StatefulWidget {
 }
 
 class _TicketDetailPageState extends State<TicketDetailPage> {
-  final TicketService _ticketService = TicketService();
-
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   List<Category> _categories = [];
@@ -84,17 +82,19 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     setState(() => _isLoading = true);
 
     try {
-      final updatedTicket = await _ticketService.updateTicket(
-        id: widget.ticket.id,
+      final updatedTicket = await TicketService.updateTicket(
+        widget.ticket.id,
         title: _titleController.text,
         description: _descriptionController.text,
         categoryId: _selectedCategory!.id.toString(),
       );
 
       setState(() {
-        widget.ticket = updatedTicket; 
+        
         _isEditMode = false;
       });
+
+      Navigator.pop(context, updatedTicket);
 
       showCupertinoDialog(
         context: context,
@@ -111,6 +111,19 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       );
     } catch (e) {
       print('Error updating ticket: $e');
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text('Gagal menyimpan perubahan: $e'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -271,7 +284,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         ),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, widget.ticket),
           child: const Icon(
             CupertinoIcons.back,
             color: CupertinoColors.white,
@@ -297,7 +310,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Status Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
@@ -307,7 +319,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          _getStatusText(widget.ticket.status.toString ()),
+                          _getStatusText(widget.ticket.status.toString()),
                           style: TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 12,
@@ -318,7 +330,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Title
                       if (_isEditMode)
                         CupertinoTextField(
                           controller: _titleController,
@@ -364,11 +375,58 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildDetailRow(
-                              label: 'Kategori',
-                              value: _selectedCategory?.name ?? '-',
-                              icon: CupertinoIcons.tag,
-                            ),
+                            if (_isEditMode)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Kategori',
+                                    style: TextStyle(
+                                      fontFamily: 'Montserrat',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  CupertinoButton(
+                                    onPressed: _showCategoryPicker,
+                                    padding: EdgeInsets.zero,
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.surface,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            _selectedCategory?.name ?? 'Pilih Kategori',
+                                            style: const TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              fontSize: 14,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                          ),
+                                          const Icon(
+                                            CupertinoIcons.chevron_down,
+                                            size: 16,
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              _buildDetailRow(
+                                label: 'Kategori',
+                                value: _selectedCategory?.name ?? '-',
+                                icon: CupertinoIcons.tag,
+                              ),
                             const Divider(height: 16),
                             _buildDetailRow(
                               label: 'Tanggal Dibuat',

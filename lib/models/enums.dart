@@ -28,7 +28,7 @@ enum TicketStatus {
   read,
   inProgress,
   resolved,
-  closed,
+  rejected,
 }
 
 TicketStatus ticketStatusFromString(String status) {
@@ -39,8 +39,8 @@ TicketStatus ticketStatusFromString(String status) {
       return TicketStatus.inProgress;
     case 'resolved':
       return TicketStatus.resolved;
-    case 'closed':
-      return TicketStatus.closed;
+    case 'rejected':
+      return TicketStatus.rejected;
     default:
       return TicketStatus.unread;
   }
@@ -54,8 +54,8 @@ String ticketStatusToString(TicketStatus status) {
       return 'in_progress';
     case TicketStatus.resolved:
       return 'resolved';
-    case TicketStatus.closed:
-      return 'closed';
+    case TicketStatus.rejected:
+      return 'rejected';
     case TicketStatus.unread:
     default:
       return 'unread';

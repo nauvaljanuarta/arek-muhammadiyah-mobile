@@ -4,11 +4,13 @@ import '../../config/theme/theme.dart';
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final VoidCallback onAddTicketPressed;
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.onAddTicketPressed,
   });
 
   @override
@@ -41,23 +43,41 @@ class CustomBottomNav extends StatelessWidget {
                 index: 1,
                 isActive: currentIndex == 1,
               ),
-              _buildNavItem(
-                icon: CupertinoIcons.plus_app_fill,
-                label: 'Add Tickets',
-                index: 2,
-                isActive: currentIndex == 2,
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: onAddTicketPressed,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      CupertinoIcons.plus_app_fill,
+                      color: AppTheme.textSecondary,
+                      size: 24,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Add Tickets',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 10,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               _buildNavItem(
                 icon: CupertinoIcons.doc_text_fill,
                 label: 'Tickets',
-                index: 3,
-                isActive: currentIndex == 3,
+                index: 2,
+                isActive: currentIndex == 2,
               ),
               _buildNavItem(
                 icon: CupertinoIcons.person_fill,
                 label: 'Profile',
-                index: 4,
-                isActive: currentIndex == 4,
+                index: 3,
+                isActive: currentIndex == 3,
               ),
             ],
           ),

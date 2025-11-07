@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'document.dart';
 
 class Ticket {
   final String id;
@@ -12,6 +13,7 @@ class Ticket {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? resolvedAt;
+  final List<Document> documents; 
 
   Ticket({
     required this.id,
@@ -25,6 +27,7 @@ class Ticket {
     required this.createdAt,
     this.updatedAt,
     this.resolvedAt,
+    this.documents = const [],
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) => Ticket(
@@ -43,6 +46,11 @@ class Ticket {
         resolvedAt: json['resolved_at'] != null
             ? DateTime.parse(json['resolved_at'])
             : null,
+        documents: json['documents'] != null
+            ? (json['documents'] as List)
+                .map((doc) => Document.fromJson(doc))
+                .toList()
+            : [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -57,5 +65,6 @@ class Ticket {
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
         'resolved_at': resolvedAt?.toIso8601String(),
+        'documents': documents.map((doc) => doc.toJson()).toList(),
       };
 }

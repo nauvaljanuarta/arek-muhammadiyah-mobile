@@ -1,18 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../../models/ticket.dart';
-import '../../services/ticket_service.dart';
+// HAPUS import ticket_service karena tidak digunakan
 
 class TicketCard extends StatelessWidget {
   final Ticket ticket;
   final VoidCallback? onTap;
-  final TicketService ticketService;
+  // HAPUS ticketService parameter karena tidak digunakan
 
   const TicketCard({
     super.key,
     required this.ticket,
-    required this.ticketService,
-    this.onTap,
+    this.onTap, // HAPUS required ticketService
   });
 
   Color _getStatusColor(String status) {
@@ -45,6 +44,11 @@ class TicketCard extends StatelessWidget {
     }
   }
 
+  // TAMBAHKAN method untuk format tanggal yang lebih baik
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -54,7 +58,7 @@ class TicketCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: CupertinoColors.systemGrey.withValues(alpha: 0.08),
+            color: CupertinoColors.systemGrey.withOpacity(0.08), // PERBAIKAN: ganti withValues dengan withOpacity
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -87,7 +91,7 @@ class TicketCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(ticket.status.toString()).withValues(alpha: 0.1),
+                      color: _getStatusColor(ticket.status.toString()).withOpacity(0.1), // PERBAIKAN: ganti withValues dengan withOpacity
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -124,7 +128,7 @@ class TicketCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    ticket.createdAt.toString().split(' ')[0], // Format date
+                    _formatDate(ticket.createdAt), // PERBAIKAN: gunakan method formatDate
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: 12,
