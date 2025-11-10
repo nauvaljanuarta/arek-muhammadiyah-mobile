@@ -46,9 +46,9 @@ class Ticket {
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       status: ticketStatusFromString(json['status']?.toString() ?? 'unread'),
-      resolution: json['resolution']?.toString() ?? ' ', 
+      resolution: json['resolution']?.toString(), 
       createdAt: DateTime.parse(json['created_at'].toString()),
-      updatedAt: DateTime.parse(json['updated_at'].toString()), // ✅ Always exists in API
+      updatedAt: DateTime.parse(json['updated_at'].toString()), 
       resolvedAt: json['resolved_at'] != null
           ? DateTime.parse(json['resolved_at'].toString())
           : null,

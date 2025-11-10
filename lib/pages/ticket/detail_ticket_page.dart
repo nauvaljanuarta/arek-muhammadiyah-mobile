@@ -169,6 +169,156 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     }
   }
 
+  Widget _buildResolutionSection() {
+  final hasResolution = widget.ticket.resolution != null && 
+                        widget.ticket.resolution!.isNotEmpty &&
+                        widget.ticket.resolution != ' ';
+
+  if (!hasResolution) {
+    return const SizedBox(); 
+  }
+
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 16),
+      const Text(
+        'Admin Response',
+        style: TextStyle(
+          fontFamily: 'Montserrat',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textPrimary,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: CupertinoColors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: CupertinoColors.systemGrey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header dengan status dan tanggal resolved
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: widget.ticket.status.color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    widget.ticket.status.label,
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: widget.ticket.status.color,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                if (widget.ticket.resolvedAt != null)
+                  Text(
+                    'Resolved: ${_formatDate(widget.ticket.resolvedAt!)}',
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // ✅ RESOLUTION CONTENT (balasan dari admin)
+            Text(
+              widget.ticket.resolution!, // Ini yang ditampilkan
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 14,
+                color: AppTheme.textPrimary,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+  // Widget untuk section Note/Pemberitahuan
+  Widget _buildNoteSection() {
+    if (widget.ticket.status != TicketStatus.unread) {
+      return const SizedBox();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemOrange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: CupertinoColors.systemOrange.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                CupertinoIcons.info_circle_fill,
+                color: CupertinoColors.systemOrange,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Pemberitahuan',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: CupertinoColors.systemOrange,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Jika ingin mengedit ticket. hapus ticket dan buat kembali ticketnya',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 13,
+                        color: CupertinoColors.systemOrange.withOpacity(0.8),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final documents = widget.ticket.documents;
@@ -232,6 +382,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Details Card
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -305,6 +456,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                         ),
                       ),
                     ),
+
+                    _buildNoteSection(),
+
+                    _buildResolutionSection(),
 
                     if (documents.isNotEmpty) ...[
                       const SizedBox(height: 16),
