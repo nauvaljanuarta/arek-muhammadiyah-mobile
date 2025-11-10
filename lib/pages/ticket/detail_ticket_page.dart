@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show Divider;
 import '../../config/theme/theme.dart';
 import '../../models/ticket.dart';
 import '../../models/category.dart';
+import '../../models/document.dart';
+import '../../models/enums.dart';
 import '../../services/category_service.dart';
-import '../../services/ticket_service.dart';
 
 class TicketDetailPage extends StatefulWidget {
   final Ticket ticket; 
@@ -19,225 +20,59 @@ class TicketDetailPage extends StatefulWidget {
 }
 
 class _TicketDetailPageState extends State<TicketDetailPage> {
-  late TextEditingController _titleController;
-  late TextEditingController _descriptionController;
   List<Category> _categories = [];
   Category? _selectedCategory;
-  bool _isEditMode = false;
-  bool _isLoading = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.ticket.title);
-    _descriptionController =
-        TextEditingController(text: widget.ticket.description);
-    _fetchCategories();
+    _loadCategories();
   }
 
-  Future<void> _fetchCategories() async {
+  Future<void> _loadCategories() async {
     try {
-      final categories = await CategoryService.getCategories();
+      final categories = await CategoryService.getCategories(activeOnly: true);
+      
       setState(() {
         _categories = categories;
-        _selectedCategory = _categories.firstWhere(
-          (c) => c.id == widget.ticket.categoryId,
-          orElse: () => _categories.first,
-        );
+        _selectedCategory = _findCategoryById(widget.ticket.categoryId);
+        _isLoading = false;
       });
-    } catch (e) {
-      print('Error fetching categories: $e');
-    }
-  }
-
-  void _toggleEditMode() {
-    setState(() {
-      _isEditMode = !_isEditMode;
-      if (!_isEditMode) {
-        _titleController.text = widget.ticket.title;
-        _descriptionController.text = widget.ticket.description;
-        _selectedCategory = _categories.firstWhere(
-          (c) => c.id == widget.ticket.categoryId,
-          orElse: () => _categories.first,
-        );
-      }
-    });
-  }
-
-  Future<void> _saveChanges() async {
-    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => const CupertinoAlertDialog(
-          title: Text('Peringatan'),
-          content: Text('Mohon lengkapi judul dan deskripsi'),
-          actions: [
-            CupertinoDialogAction(child: Text('OK')),
-          ],
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final updatedTicket = await TicketService.updateTicket(
-        widget.ticket.id,
-        title: _titleController.text,
-        description: _descriptionController.text,
-        categoryId: _selectedCategory!.id.toString(),
-      );
-
+    } catch (error) {
       setState(() {
-        
-        _isEditMode = false;
+        _isLoading = false;
       });
-
-      Navigator.pop(context, updatedTicket);
-
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Berhasil'),
-          content: const Text('Perubahan pengajuan telah disimpan'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      print('Error updating ticket: $e');
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: Text('Gagal menyimpan perubahan: $e'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
-  void _showCategoryPicker() {
-    if (_categories.isEmpty) return;
-
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => Container(
-        height: 250,
-        color: CupertinoColors.white,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CupertinoButton(
-                    child: const Text('Batal'),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Text(
-                    'Pilih Kategori',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  CupertinoButton(
-                    child: const Text('Selesai'),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: CupertinoPicker(
-                itemExtent: 40,
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    _selectedCategory = _categories[index];
-                  });
-                },
-                children: _categories
-                    .map((category) => Center(
-                          child: Text(
-                            category.name,
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 16,
-                            ),
-                          ),
-                        ))
-                    .toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return const Color(0xFF34C759);
-      case 'rejected':
-        return const Color(0xFFFF3B30);
-      case 'review':
-        return const Color(0xFFFF9500);
-      case 'pending':
-        return const Color(0xFF5AC8FA);
-      default:
-        return AppTheme.textSecondary;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'Disetujui';
-      case 'pending':
-        return 'Menunggu';
-      case 'rejected':
-        return 'Ditolak';
-      case 'review':
-        return 'Review';
-      default:
-        return status;
+  Category? _findCategoryById(int? categoryId) {
+    if (categoryId == null) return null;
+    try {
+      return _categories.firstWhere((category) => category.id == categoryId);
+    } catch (_) {
+      return null;
     }
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} - ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildDetailRow({
-    required String label,
-    required String value,
-    IconData? icon,
-  }) {
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1048576) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / 1048576).toStringAsFixed(1)} MB';
+  }
+
+  Widget _buildDetailItem(String label, String value, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 20, color: AppTheme.primaryMedium),
-            const SizedBox(width: 12),
-          ],
+          Icon(icon, size: 20, color: AppTheme.primaryMedium),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,95 +104,220 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     );
   }
 
+  Widget _buildDocumentItem(Document document) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: CupertinoColors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppTheme.primaryLight.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          _getFileIcon(document.fileName),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  document.fileName,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _formatFileSize(document.fileSize),
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getFileIcon(String fileName) {
+    final extension = fileName.toLowerCase().split('.').last;
+    final isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(extension);
+    
+    if (isImage) {
+      return const Icon(
+        CupertinoIcons.photo,
+        color: CupertinoColors.systemBlue,
+        size: 24,
+      );
+    } else {
+      return const Icon(
+        CupertinoIcons.doc,
+        color: CupertinoColors.systemGrey,
+        size: 24,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final documents = widget.ticket.documents;
+
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppTheme.primaryDark,
-        middle: Text(
-          _isEditMode ? 'Edit Pengajuan' : 'Detail Pengajuan',
-          style: const TextStyle(
+        backgroundColor: AppTheme.background,
+        middle: const Text(
+          'Submission Details',
+          style: TextStyle(
             fontFamily: 'Montserrat',
-            color: CupertinoColors.white,
+            color: CupertinoColors.black,
             fontWeight: FontWeight.w600,
           ),
         ),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: () => Navigator.pop(context, widget.ticket),
+          onPressed: () => Navigator.pop(context),
           child: const Icon(
             CupertinoIcons.back,
-            color: CupertinoColors.white,
+            color: AppTheme.primaryDark,
           ),
         ),
-        trailing: _isEditMode
-            ? null
-            : CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: _toggleEditMode,
-                child: const Icon(
-                  CupertinoIcons.pencil,
-                  color: CupertinoColors.white,
-                ),
-              ),
       ),
       child: SafeArea(
         child: _isLoading
             ? const Center(child: CupertinoActivityIndicator())
             : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(widget.ticket.status.toString())
-                              .withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _getStatusText(widget.ticket.status.toString()),
-                          style: TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _getStatusColor(widget.ticket.status.toString()),
-                          ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Status Chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: widget.ticket.status.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        widget.ticket.status.label,
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: widget.ticket.status.color,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 16),
 
-                      if (_isEditMode)
-                        CupertinoTextField(
-                          controller: _titleController,
-                          placeholder: 'Masukkan judul',
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(12),
+                    // Title
+                    Text(
+                      widget.ticket.title,
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: CupertinoColors.systemGrey.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          style: const TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontSize: 16,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailItem(
+                            'Category',
+                            _selectedCategory?.name ?? 'No category',
+                            CupertinoIcons.tag,
                           ),
-                        )
-                      else
-                        Text(
-                          widget.ticket.title,
-                          style: const TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                          const Divider(height: 16),
+                          _buildDetailItem(
+                            'Created Date',
+                            _formatDate(widget.ticket.createdAt),
+                            CupertinoIcons.calendar,
                           ),
+                          const Divider(height: 16),
+                          _buildDetailItem(
+                            'Last Updated',
+                            _formatDate(widget.ticket.updatedAt),
+                            CupertinoIcons.clock,
+                          ),
+                          if (widget.ticket.resolvedAt != null) ...[
+                            const Divider(height: 16),
+                            _buildDetailItem(
+                              'Resolved Date',
+                              _formatDate(widget.ticket.resolvedAt!),
+                              CupertinoIcons.checkmark_alt_circle,
+                            ),
+                          ]
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Description
+                    const Text(
+                      'Description',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        widget.ticket.description,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 14,
+                          color: AppTheme.textPrimary,
+                          height: 1.6,
                         ),
+                      ),
+                    ),
 
+                    if (documents.isNotEmpty) ...[
                       const SizedBox(height: 16),
-
-                      // Detail Card
+                      const Text(
+                        'Attached Files',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -365,165 +325,23 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  CupertinoColors.systemGrey.withOpacity(0.1),
+                              color: CupertinoColors.systemGrey.withOpacity(0.1),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (_isEditMode)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Kategori',
-                                    style: TextStyle(
-                                      fontFamily: 'Montserrat',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  CupertinoButton(
-                                    onPressed: _showCategoryPicker,
-                                    padding: EdgeInsets.zero,
-                                    child: Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.surface,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            _selectedCategory?.name ?? 'Pilih Kategori',
-                                            style: const TextStyle(
-                                              fontFamily: 'Montserrat',
-                                              fontSize: 14,
-                                              color: AppTheme.textPrimary,
-                                            ),
-                                          ),
-                                          const Icon(
-                                            CupertinoIcons.chevron_down,
-                                            size: 16,
-                                            color: AppTheme.textSecondary,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              _buildDetailRow(
-                                label: 'Kategori',
-                                value: _selectedCategory?.name ?? '-',
-                                icon: CupertinoIcons.tag,
-                              ),
-                            const Divider(height: 16),
-                            _buildDetailRow(
-                              label: 'Tanggal Dibuat',
-                              value: _formatDate(widget.ticket.createdAt),
-                              icon: CupertinoIcons.calendar,
-                            ),
-                            const Divider(height: 16),
-                            _buildDetailRow(
-                              label: 'Status',
-                              value: _getStatusText(widget.ticket.status.toString()),
-                              icon: CupertinoIcons.checkmark_circle,
-                            ),
+                            for (var document in documents)
+                              _buildDocumentItem(document),
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      // Description
-                      const Text(
-                        'Deskripsi',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      if (_isEditMode)
-                        CupertinoTextField(
-                          controller: _descriptionController,
-                          placeholder: 'Masukkan deskripsi',
-                          maxLines: 6,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        )
-                      else
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            widget.ticket.description,
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: AppTheme.textPrimary,
-                              height: 1.6,
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 24),
-
-                      // Buttons
-                      if (_isEditMode)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: CupertinoButton(
-                                color: AppTheme.surface,
-                                borderRadius: BorderRadius.circular(12),
-                                onPressed: _toggleEditMode,
-                                child: const Text(
-                                  'Batal',
-                                  style: TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: CupertinoButton(
-                                color: AppTheme.primaryDark,
-                                borderRadius: BorderRadius.circular(12),
-                                onPressed: _saveChanges,
-                                child: const Text(
-                                  'Simpan',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                     ],
-                  ),
+
+                    const SizedBox(height: 32),
+                  ],
                 ),
               ),
       ),

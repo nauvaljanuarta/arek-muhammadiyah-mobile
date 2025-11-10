@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart' show Color;
+
 enum Gender { male, female }
 
 Gender? genderFromString(String? value) {
@@ -57,7 +59,38 @@ String ticketStatusToString(TicketStatus status) {
     case TicketStatus.rejected:
       return 'rejected';
     case TicketStatus.unread:
-    default:
-      return 'unread';
+    return 'unread';
+  }
+}
+
+extension TicketStatusExtension on TicketStatus {
+  String get label {
+    switch (this) {
+      case TicketStatus.unread:
+        return 'Unread';
+      case TicketStatus.read:
+        return 'Read';
+      case TicketStatus.inProgress:
+        return 'Process';
+      case TicketStatus.resolved:
+        return 'Resolved';
+      case TicketStatus.rejected:
+        return 'Rejected';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case TicketStatus.unread:
+        return const Color(0xFF9CA3AF); // abu-abu
+      case TicketStatus.read:
+        return const Color(0xFF3B82F6); // biru
+      case TicketStatus.inProgress:
+        return const Color(0xFFF59E0B); // oranye
+      case TicketStatus.resolved:
+        return const Color(0xFF10B981); // hijau
+      case TicketStatus.rejected:
+        return const Color(0xFFEF4444); // merah
+    }
   }
 }

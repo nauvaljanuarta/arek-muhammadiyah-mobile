@@ -19,14 +19,16 @@ class Document {
   });
 
   factory Document.fromJson(Map<String, dynamic> json) => Document(
-        id: json['id'].toString(),
-        ticketId: json['ticket_id'].toString(),
-        fileName: json['file_name'],
-        fileUrl: json['file_url'],
-        fileType: json['file_type'],
-        fileSize: json['file_size'],
-        createdAt: DateTime.parse(json['created_at']),
-      );
+      id: json['id']?.toString() ?? '',
+      ticketId: json['ticket_id']?.toString() ?? '',
+      fileName: json['file_name']?.toString() ?? '',
+      fileUrl: json['file_url']?.toString() ?? '',
+      fileType: json['file_type']?.toString() ?? '',
+      fileSize: json['file_size'] != null ? json['file_size'] as int : 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(), 
+    );
 
   Map<String, dynamic> toJson() => {
         'id': id,

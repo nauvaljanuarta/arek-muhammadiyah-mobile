@@ -199,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 40),
                       CupertinoTextField(
                         controller: _usernameController,
-                        placeholder: 'NIK',
+                        placeholder: 'No. Telp',
                         keyboardType: TextInputType.text,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(

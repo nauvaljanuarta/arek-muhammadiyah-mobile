@@ -11,23 +11,27 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   late VideoPlayerController _controller;
-  bool _hasNavigated = false; // FLAG supaya navigasi hanya sekali
+  late Future<void> _initializeVideo;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
 
     _controller = VideoPlayerController.asset('assets/intro/Montserrat.mp4')
-      ..initialize().then((_) {
-        setState(() {});
-        _controller.play();
-      });
+      ..setLooping(false)
+      ..setVolume(0); 
+
+    _initializeVideo = _controller.initialize().then((_) {
+      _controller.play();
+    });
 
     _controller.addListener(() {
-      if (!_hasNavigated && // cek flag
-          _controller.value.position >= _controller.value.duration &&
-          !_controller.value.isPlaying) {
-        _hasNavigated = true; // set flag supaya tidak dipanggil lagi
+      if (!_hasNavigated &&
+          _controller.value.isInitialized &&
+          !_controller.value.isPlaying &&
+          _controller.value.position >= _controller.value.duration) {
+        _hasNavigated = true;
         if (mounted) {
           Navigator.of(context).pushReplacement(
             CupertinoPageRoute(builder: (_) => const LoginPage()),
@@ -48,15 +52,23 @@ class _SplashPageState extends State<SplashPage> {
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.white,
       child: Center(
-        child: _controller.value.isInitialized
-            ? SizedBox(
+        child: FutureBuilder(
+          future: _initializeVideo,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return SizedBox(
                 width: 360,
                 child: AspectRatio(
                   aspectRatio: _controller.value.aspectRatio,
                   child: VideoPlayer(_controller),
                 ),
-              )
-            : const CupertinoActivityIndicator(),
+              );
+            } else {
+              // Show a placeholder until video is ready
+              return const CupertinoActivityIndicator();
+            }
+          },
+        ),
       ),
     );
   }

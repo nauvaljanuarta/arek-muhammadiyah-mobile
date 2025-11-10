@@ -1,50 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../../models/ticket.dart';
-// HAPUS import ticket_service karena tidak digunakan
+import '../../models/enums.dart';
 
 class TicketCard extends StatelessWidget {
   final Ticket ticket;
   final VoidCallback? onTap;
-  // HAPUS ticketService parameter karena tidak digunakan
 
   const TicketCard({
     super.key,
     required this.ticket,
-    this.onTap, // HAPUS required ticketService
+    this.onTap,
   });
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return const Color(0xFF34C759);
-      case 'rejected':
-        return const Color(0xFFFF3B30);
-      case 'review':
-        return const Color(0xFFFF9500);
-      case 'pending':
-        return const Color(0xFF5AC8FA);
-      default:
-        return AppTheme.textSecondary;
-    }
-  }
 
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'Disetujui';
-      case 'pending':
-        return 'Menunggu';
-      case 'rejected':
-        return 'Ditolak';
-      case 'review':
-        return 'Review';
-      default:
-        return status;
-    }
-  }
-
-  // TAMBAHKAN method untuk format tanggal yang lebih baik
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
@@ -52,15 +21,16 @@ class TicketCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
         boxShadow: [
           BoxShadow(
-            color: CupertinoColors.systemGrey.withOpacity(0.08), // PERBAIKAN: ganti withValues dengan withOpacity
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+            color: CupertinoColors.systemGrey.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -72,6 +42,7 @@ class TicketCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Judul + Status
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -91,22 +62,25 @@ class TicketCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(ticket.status.toString()).withOpacity(0.1), // PERBAIKAN: ganti withValues dengan withOpacity
+                      color: ticket.status.color.withOpacity(0.1), // pake color dari extension
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      _getStatusText(ticket.status.toString()),
+                      ticket.status.label, // pake label dari extension
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _getStatusColor(ticket.status.toString()),
+                        color: ticket.status.color, // pake color dari extension
                       ),
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 8),
+
+              // Deskripsi
               Text(
                 ticket.description,
                 style: const TextStyle(
@@ -120,40 +94,46 @@ class TicketCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Row(
-                children: [
-                  Icon(
-                    CupertinoIcons.calendar,
-                    size: 14,
+              children: [
+                Icon(
+                  CupertinoIcons.calendar,
+                  size: 14,
+                  color: AppTheme.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(ticket.createdAt),
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 12,
                     color: AppTheme.textSecondary,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDate(ticket.createdAt), // PERBAIKAN: gunakan method formatDate
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 12,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (ticket.categoryId != null) ...[
-                    Icon(
-                      CupertinoIcons.tag,
-                      size: 14,
-                      color: AppTheme.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'ID: ${ticket.categoryId}',
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 12,
+                ),
+                const Spacer(),
+                if (ticket.categoryName != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min, 
+                    children: [
+                      Icon(
+                        CupertinoIcons.tag,
+                        size: 14,
                         color: AppTheme.textSecondary,
                       ),
-                    ),
-                  ],
-                ],
-              ),
+                      const SizedBox(width: 4),
+                      Text(
+                        ticket.categoryName!,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+
             ],
           ),
         ),

@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UserService {
   static final ApiClient _client = ApiClient();
   static User? currentUser;
+  static String? _token;
+
+  static String? get token => _token;
 
   static Future<bool> login({
     required String telp,
@@ -24,9 +27,12 @@ class UserService {
       final userData = data['data']?['user'];
 
       if (token != null && userData != null) {
+        _token = token;
+        currentUser = User.fromJson(userData);
+
         await prefs.setString('token', token);
         await prefs.setString('user', jsonEncode(userData));
-        currentUser = User.fromJson(userData);
+        await prefs.setBool('isLoggedIn', true);
       }
 
       return true;
@@ -38,15 +44,27 @@ class UserService {
   static Future<void> loadUserFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
-    if (userJson != null) {
+    final savedToken = prefs.getString('token');
+
+    if (userJson != null && savedToken != null) {
+      _token = savedToken;
       currentUser = User.fromJson(jsonDecode(userJson));
     }
+  }
+
+  static Future<bool> isStillLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final token = prefs.getString('token');
+    return isLoggedIn && token != null && token.isNotEmpty;
   }
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('user');
+    await prefs.remove('isLoggedIn');
+    _token = null;
     currentUser = null;
   }
 

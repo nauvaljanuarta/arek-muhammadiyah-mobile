@@ -42,7 +42,7 @@ class _ArticlePageState extends State<ArticlePage> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 24),
-                ...articles.map(_buildArticleCard).toList(),
+                ...articles.map(_buildArticleCard),
               ],
             ),
           );

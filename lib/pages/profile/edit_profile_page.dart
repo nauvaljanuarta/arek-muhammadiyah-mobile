@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../../models/user.dart';
 import '../../services/user_service.dart';
-import '../../config/theme/theme.dart';
 
 class EditProfilePage extends StatefulWidget {
   final User user;
