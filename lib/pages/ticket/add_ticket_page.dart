@@ -434,7 +434,7 @@ Future<FileValidation> _validateFile(File file) async {
     setState(() => _isSubmitting = false);
     _showDialog(
       'Success',
-      'Your submission has been sent successfully!',
+      'Your Ticket has been sent successfully!',
       onOk: () {
         Navigator.pop(context);
         Navigator.pop(context, true);
@@ -452,7 +452,7 @@ Future<FileValidation> _validateFile(File file) async {
     }
 
     _showDialog(
-      'Submission Failed',
+      'Ticket Failed',
       errorMessage,
     );
   }

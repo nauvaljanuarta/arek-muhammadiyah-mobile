@@ -327,7 +327,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       navigationBar: CupertinoNavigationBar(
         backgroundColor: AppTheme.background,
         middle: const Text(
-          'Submission Details',
+          'TIcket Details',
           style: TextStyle(
             fontFamily: 'Montserrat',
             color: CupertinoColors.black,

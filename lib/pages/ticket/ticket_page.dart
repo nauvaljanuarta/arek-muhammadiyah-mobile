@@ -75,8 +75,6 @@ class _TicketPageState extends State<TicketPage> {
 
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-
-          // Loading State
           if (isLoading)
             const SliverToBoxAdapter(
               child: Center(
@@ -87,7 +85,6 @@ class _TicketPageState extends State<TicketPage> {
               ),
             )
 
-          // Error State
           else if (errorMessage != null)
             SliverToBoxAdapter(
               child: Padding(
@@ -135,7 +132,6 @@ class _TicketPageState extends State<TicketPage> {
               ),
             )
 
-          // Empty State
           else if (userTickets.isEmpty)
             SliverToBoxAdapter(
               child: Padding(
@@ -163,7 +159,7 @@ class _TicketPageState extends State<TicketPage> {
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'Belum ada pengajuan',
+                        'No Tickets Yet',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 16,
@@ -173,7 +169,7 @@ class _TicketPageState extends State<TicketPage> {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Tap tombol Tambah Pengajuan untuk membuat pengajuan baru',
+                        'Tap tombol "Add Tickets" di bawah untuk membuat pengajuan tiket baru.',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 14,
@@ -186,8 +182,6 @@ class _TicketPageState extends State<TicketPage> {
                 ),
               ),
             )
-
-          // Tickets List
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
@@ -204,8 +198,6 @@ class _TicketPageState extends State<TicketPage> {
                           ),
                         ),
                       );
-
-                      // Jika ada updated ticket dari detail page, update di list
                       if (result != null && result is ticket_model.Ticket) {
                         setState(() {
                           userTickets[index] = result;
@@ -231,7 +223,6 @@ class _TicketPageState extends State<TicketPage> {
                       ),
                     );
 
-                    // Refresh tickets if a new ticket was created
                     if (result == true) {
                       _refreshTickets();
                     }
@@ -253,7 +244,7 @@ class _TicketPageState extends State<TicketPage> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Tambah Pengajuan',
+                          'Add Tickets',
                           style: TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 16,

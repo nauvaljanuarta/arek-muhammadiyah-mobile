@@ -21,7 +21,6 @@ class CustomBottomNav extends StatelessWidget {
         border: Border(
           top: BorderSide(
             color: AppTheme.primaryLight.withValues(alpha: 0.2),
-            width: 0.5,
           ),
         ),
       ),
