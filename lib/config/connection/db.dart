@@ -1,4 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Connection {
-  static String baseUrl = 'http://192.168.1.110:8080/api';
+  static String baseUrl = dotenv.env['BASE_URL_EMU']!;
 }
