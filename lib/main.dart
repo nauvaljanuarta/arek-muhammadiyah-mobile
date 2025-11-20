@@ -2,11 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'config/theme/theme.dart';
 import 'pages/splash/splash_page.dart';
-import 'pages/home/home_page.dart'; // misal ada HomePage
 import 'services/user_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   final prefs = await SharedPreferences.getInstance();
   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
@@ -25,7 +26,7 @@ class MuhammadiyahApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Muhammadiyah App',
       theme: AppTheme.cupertinoTheme,
-      home: isLoggedIn ? const HomePage() : const SplashPage(),
+      home:  const SplashPage(),
     );
   }
 }

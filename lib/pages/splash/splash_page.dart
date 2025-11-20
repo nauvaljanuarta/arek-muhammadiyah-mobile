@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
+
 import '../auth/login_page.dart';
+import '../home/home_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -20,23 +23,30 @@ class _SplashPageState extends State<SplashPage> {
 
     _controller = VideoPlayerController.asset('assets/intro/Montserrat.mp4')
       ..setLooping(false)
-      ..setVolume(0); 
+      ..setVolume(0);
 
     _initializeVideo = _controller.initialize().then((_) {
       _controller.play();
     });
 
-    _controller.addListener(() {
+    _controller.addListener(() async {
       if (!_hasNavigated &&
           _controller.value.isInitialized &&
           !_controller.value.isPlaying &&
           _controller.value.position >= _controller.value.duration) {
+        
         _hasNavigated = true;
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            CupertinoPageRoute(builder: (_) => const LoginPage()),
-          );
-        }
+
+        final prefs = await SharedPreferences.getInstance();
+        final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+        if (!mounted) return;
+
+        Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(
+            builder: (_) => isLoggedIn ? const HomePage() : const LoginPage(),
+          ),
+        );
       }
     });
   }
@@ -64,7 +74,6 @@ class _SplashPageState extends State<SplashPage> {
                 ),
               );
             } else {
-              // Show a placeholder until video is ready
               return const CupertinoActivityIndicator();
             }
           },
