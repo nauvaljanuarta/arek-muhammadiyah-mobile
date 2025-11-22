@@ -3,13 +3,16 @@ import 'package:MuhammadiyahApp/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../article/article_page.dart';
+import '../article/detail_article_page.dart';
 import '../ticket/ticket_page.dart';
 import '../profile/profile_page.dart';
 import '../../widgets/core/custom_bottom_nav.dart';
 import '../../widgets/core/custom_app_bar.dart';
 import '../../widgets/home/category_list.dart';
 import '../../widgets/home/featured_article.dart';
-import '../../widgets/home/recent_article.dart';
+import '../../widgets/home/article_card.dart';
+import '../../services/article_service.dart';
+import '../../models/article.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -52,8 +55,7 @@ class _HomePageState extends State<HomePage> {
                 onAddTicketPressed: () {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
-                      builder: (context) => AddTicketPage(
-                      ),
+                      builder: (context) => AddTicketPage(),
                     ),
                   );
                 },
@@ -207,7 +209,12 @@ class HomeContent extends StatelessWidget {
                         ],
                       ),
                       onPressed: () {
-                        // Navigate to news page
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) => const ArticlePage(),
+                          ),
+                        );
                       },
                     ),
                   ],
@@ -215,12 +222,94 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            const RecentArticles(),
+            
+            // Recent Articles Section dengan ArticleCard
+            _buildRecentArticlesSection(),
+            
             const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         ),
         CustomAppBar(currentUser: currentUser),
       ],
+    );
+  }
+
+  // Method untuk section artikel terbaru
+  SliverList _buildRecentArticlesSection() {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        FutureBuilder<List<Article>>(
+          future: ArticleService.getArticles(limit: 5, published: true),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                height: 200,
+                child: const Center(child: CupertinoActivityIndicator()),
+              );
+            }
+            
+            if (snapshot.hasError) {
+              return Container(
+                height: 200,
+                child: Center(
+                  child: Text(
+                    'Error: ${snapshot.error}',
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              );
+            }
+            
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Container(
+                height: 200,
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        CupertinoIcons.doc_text,
+                        size: 48,
+                        color: AppTheme.textSecondary,
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'Belum ada artikel tersedia',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            
+            final articles = snapshot.data!;
+            
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Column(
+                children: articles.map((article) => ArticleCard(
+                  article: article,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) => DetailArticlePage(article: article),
+                      ),
+                    );
+                  },
+                )).toList(),
+              ),
+            );
+          },
+        ),
+      ]),
     );
   }
 }
