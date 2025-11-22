@@ -31,7 +31,6 @@ class ArticleService {
     }
   }
 
-  // ✅ Get article by ID
   static Future<Article?> getArticleById(int id) async {
     final url = Uri.parse('${Connection.baseUrl}/articles/$id');
     final response = await http.get(url);
@@ -45,7 +44,6 @@ class ArticleService {
     return null;
   }
 
-  // ✅ Get article by slug
   static Future<Article?> getArticleBySlug(String slug) async {
     final url = Uri.parse('${Connection.baseUrl}/articles/slug/$slug');
     final response = await http.get(url);
@@ -92,7 +90,6 @@ class ArticleService {
     return null;
   }
 
-  // ✅ Update article
   static Future<Article?> updateArticle({
     required int id,
     required String title,
@@ -125,7 +122,6 @@ class ArticleService {
     return null;
   }
 
-  // ✅ Delete article
   static Future<bool> deleteArticle(int id) async {
     final url = Uri.parse('${Connection.baseUrl}/articles/$id');
     final response = await http.delete(url);
