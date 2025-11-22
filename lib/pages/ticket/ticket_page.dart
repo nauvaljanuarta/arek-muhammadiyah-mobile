@@ -51,170 +51,193 @@ class _TicketPageState extends State<TicketPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppTheme.background,
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Ticket',
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+    return CupertinoPageScaffold(
+      backgroundColor: AppTheme.background,
+      child: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              CupertinoSliverNavigationBar(
+                largeTitle: const Text(
+                  'Ticket',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                backgroundColor: AppTheme.background.withAlpha(95),
+                border: Border(
+                  bottom: BorderSide(
+                    color: CupertinoColors.systemGrey5,
+                    width: 0.5,
+                  ),
                 ),
               ),
-            ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+              if (isLoading)
+                const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CupertinoActivityIndicator(),
+                    ),
+                  ),
+                )
+
+              else if (errorMessage != null)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: CupertinoColors.systemGrey.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.exclamationmark_triangle,
+                            size: 48,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            errorMessage!,
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          CupertinoButton(
+                            onPressed: _refreshTickets,
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+
+              else if (userTickets.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: CupertinoColors.systemGrey.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            CupertinoIcons.doc_text,
+                            size: 48,
+                            color: AppTheme.textSecondary,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No Tickets Yet',
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Tap tombol "+" di kanan bawah untuk membuat pengajuan tiket baru.',
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 14,
+                              color: AppTheme.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final ticket = userTickets[index];
+                      return TicketCard(
+                        ticket: ticket,
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => TicketDetailPage(
+                                ticket: ticket,
+                              ),
+                            ),
+                          );
+                          if (result != null && result is ticket_model.Ticket) {
+                            setState(() {
+                              userTickets[index] = result;
+                            });
+                          }
+                        },
+                      );
+                    },
+                    childCount: userTickets.length,
+                  ),
+                ),
+
+              // Hapus SliverToBoxAdapter untuk button Add Tickets yang lama
+              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-          if (isLoading)
-            const SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CupertinoActivityIndicator(),
-                ),
-              ),
-            )
-
-          else if (errorMessage != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CupertinoColors.systemGrey.withOpacity(0.1),
-                        blurRadius: 12,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        CupertinoIcons.exclamationmark_triangle,
-                        size: 48,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        errorMessage!,
-                        style: const TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      CupertinoButton(
-                        onPressed: _refreshTickets,
-                        child: const Text('Coba Lagi'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-
-          else if (userTickets.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CupertinoColors.systemGrey.withOpacity(0.1),
-                        blurRadius: 12,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Column(
-                    children: [
-                      Icon(
-                        CupertinoIcons.doc_text,
-                        size: 48,
-                        color: AppTheme.textSecondary,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'No Tickets Yet',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Tap tombol "Add Tickets" di bawah untuk membuat pengajuan tiket baru.',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final ticket = userTickets[index];
-                  return TicketCard(
-                    ticket: ticket,
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (context) => TicketDetailPage(
-                            ticket: ticket,
-                          ),
-                        ),
-                      );
-                      if (result != null && result is ticket_model.Ticket) {
-                        setState(() {
-                          userTickets[index] = result;
-                        });
-                      }
-                    },
-                  );
-                },
-                childCount: userTickets.length,
-              ),
-            ),
-
+          // Floating Action Button
           if (!isLoading && errorMessage == null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryDark,
+                  borderRadius: BorderRadius.circular(50),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryDark.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: CupertinoButton(
+                  padding: const EdgeInsets.all(16),
                   onPressed: () async {
                     final result = await Navigator.push(
                       context,
@@ -227,39 +250,14 @@ class _TicketPageState extends State<TicketPage> {
                       _refreshTickets();
                     }
                   },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryDark,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          CupertinoIcons.add,
-                          color: CupertinoColors.white,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Add Tickets',
-                          style: TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: CupertinoColors.white,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: const Icon(
+                    CupertinoIcons.add,
+                    color: CupertinoColors.white,
+                    size: 28,
                   ),
                 ),
               ),
             ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),
     );

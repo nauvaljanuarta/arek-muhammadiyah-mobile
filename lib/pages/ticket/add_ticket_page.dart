@@ -1093,7 +1093,7 @@ Future<FileValidation> _validateFile(File file) async {
                           color:
                               AppTheme.primaryDark,
                           borderRadius: BorderRadius.circular(
-                            12,
+                            36,
                           ),
                           onPressed:
                               _isSubmitting

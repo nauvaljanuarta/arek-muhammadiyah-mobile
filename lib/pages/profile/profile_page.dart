@@ -74,223 +74,250 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Profil'),
-      ),
-      child: SafeArea(
-        child: _isLoading
-            ? const Center(child: CupertinoActivityIndicator())
-            : _user == null
-                ? const Center(
-                    child: Text(
-                      "Gagal memuat data pengguna",
-                      style: TextStyle(fontFamily: 'Montserrat'),
-                    ),
-                  )
-                : Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              _buildHeader(),
-                              const SizedBox(height: 24),
-                              _buildProfileInfoSection(),
-                              const SizedBox(height: 24),
-                              _buildProfileSection(
-                                title: 'Akun',
-                                items: [
-                                  _ProfileItem(
-                                    icon: CupertinoIcons.person_circle,
-                                    title: 'Edit Profile',
-                                    color: AppTheme.primaryMedium,
-                                    onTap: () async {
-                                      final updated = await Navigator.push(
-                                        context,
-                                        CupertinoPageRoute(
-                                          builder: (_) =>
-                                              EditProfilePage(user: _user!),
-                                        ),
-                                      );
-                                      if (updated == true) _loadUserData();
-                                    },
-                                  ),
-                                  _ProfileItem(
-                                    icon: CupertinoIcons.lock_circle,
-                                    title: 'Change Password',
-                                    color: AppTheme.accent,
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              _buildProfileSection(
-                                title: 'Other',
-                                items: [
-                                  _ProfileItem(
-                                    icon:
-                                        CupertinoIcons.square_arrow_right_fill,
-                                    title: 'Logout',
-                                    color: CupertinoColors.systemRed,
-                                    onTap: () => _logout(context),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 80),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.primaryDark, AppTheme.primaryMedium],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: const BoxDecoration(
-              color: CupertinoColors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              CupertinoIcons.person_fill,
-              size: 40,
-              color: AppTheme.primaryDark,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _user?.name ?? '-',
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: CupertinoColors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _user?.formattedNik ?? '-', 
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 14,
-              color: CupertinoColors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (_user?.role != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: CupertinoColors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+      backgroundColor: AppTheme.background,
+      child: CustomScrollView(
+        slivers: [
+          // Cupertino Sliver Navigation Bar
+          CupertinoSliverNavigationBar(
+            largeTitle: const Text(
+              'Profile',
+              style: TextStyle(
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.bold,
               ),
-              child: Text(
-                _user!.role!.name.toUpperCase(),
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoColors.white,
+            ),
+            backgroundColor: AppTheme.background.withOpacity(0.95),
+            border: Border(
+              bottom: BorderSide(
+                color: CupertinoColors.systemGrey5,
+                width: 0.5,
+              ),
+            ),
+          ),
+
+          // Content
+          if (_isLoading)
+            SliverToBoxAdapter(
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: const Center(
+                  child: CupertinoActivityIndicator(),
                 ),
               ),
+            )
+          else if (_user == null)
+            SliverToBoxAdapter(
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: const Center(
+                  child: Text(
+                    "Failed to load user data",
+                    style: TextStyle(fontFamily: 'Montserrat'),
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 16),
+                _buildHeader(),
+                const SizedBox(height: 24),
+                _buildProfileInfoSection(),
+                const SizedBox(height: 24),
+                _buildProfileSection(
+                  title: 'Account',
+                  items: [
+                    _ProfileItem(
+                      icon: CupertinoIcons.person_circle,
+                      title: 'Edit Profile',
+                      color: AppTheme.primaryMedium,
+                      onTap: () async {
+                        final updated = await Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => EditProfilePage(user: _user!),
+                          ),
+                        );
+                        if (updated == true) _loadUserData();
+                      },
+                    ),
+                    _ProfileItem(
+                      icon: CupertinoIcons.lock_circle,
+                      title: 'Change Password',
+                      color: AppTheme.accent,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildProfileSection(
+                  title: 'Other',
+                  items: [
+                    _ProfileItem(
+                      icon: CupertinoIcons.square_arrow_right_fill,
+                      title: 'Logout',
+                      color: CupertinoColors.systemRed,
+                      onTap: () => _logout(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 80),
+              ]),
             ),
         ],
       ),
     );
   }
 
-  // ✅ SECTION: Informasi Profil Lengkap
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppTheme.primaryDark, AppTheme.primaryMedium],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: CupertinoColors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                CupertinoIcons.person_fill,
+                size: 40,
+                color: AppTheme.primaryDark,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _user?.name ?? '-',
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: CupertinoColors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _user?.formattedNik ?? '-', 
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 14,
+                color: CupertinoColors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_user?.role != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _user!.role!.name.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: CupertinoColors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfileInfoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            'Informasi Profil',
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              'Profile Information',
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
             ),
           ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: CupertinoColors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: CupertinoColors.systemGrey.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildInfoItem(
-                icon: CupertinoIcons.phone,
-                title: 'Telepon',
-                value: _user?.telp ?? '-',
-              ),
-              _buildDivider(),
+          Container(
+            decoration: BoxDecoration(
+              color: CupertinoColors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.systemGrey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
                 _buildInfoItem(
-                icon: CupertinoIcons.calendar,
-                title: 'Tanggal Lahir',
-                value: _user?.birthDate != null 
-                  ? '${_user!.birthDate!.day}/${_user!.birthDate!.month}/${_user!.birthDate!.year}'
-                  : '-',
+                  icon: CupertinoIcons.phone,
+                  title: 'Telphone',
+                  value: _user?.telp ?? '-',
                 ),
                 _buildDivider(),
                 _buildInfoItem(
-                icon: CupertinoIcons.person_2,
-                title: 'Jenis Kelamin',
-                value: _user?.gender?.name??'-',
+                  icon: CupertinoIcons.calendar,
+                  title: 'Birth Date',
+                  value: _user?.birthDate != null 
+                    ? '${_user!.birthDate!.day}/${_user!.birthDate!.month}/${_user!.birthDate!.year}'
+                    : '-',
                 ),
-              _buildDivider(),
-              _buildInfoItem(
-                icon: CupertinoIcons.briefcase,
-                title: 'Pekerjaan',
-                value: _user?.job ?? '-',
-              ),
-              _buildDivider(),
-              _buildInfoItem(
-                icon: CupertinoIcons.location,
-                title: 'Lokasi',
-                value: _user?.locationInfo ?? '-', 
-                isMultiLine: true,
-              ),
-              _buildDivider(),
-              _buildInfoItem(
-                icon: CupertinoIcons.home,
-                title: 'Alamat',
-                value: _user?.address ?? '-',
-                isMultiLine: true,
-              ),
-            ],
+                _buildDivider(),
+                _buildInfoItem(
+                  icon: CupertinoIcons.person_2,
+                  title: 'Gender',
+                  value: _user?.gender?.name ?? '-',
+                ),
+                _buildDivider(),
+                _buildInfoItem(
+                  icon: CupertinoIcons.briefcase,
+                  title: 'Job',
+                  value: _user?.job ?? '-',
+                ),
+                _buildDivider(),
+                _buildInfoItem(
+                  icon: CupertinoIcons.location,
+                  title: 'Location',
+                  value: _user?.locationInfo ?? '-', 
+                  isMultiLine: true,
+                ),
+                _buildDivider(),
+                _buildInfoItem(
+                  icon: CupertinoIcons.home,
+                  title: 'Address',
+                  value: _user?.address ?? '-',
+                  isMultiLine: true,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -364,93 +391,96 @@ class _ProfilePageState extends State<ProfilePage> {
     required String title,
     required List<_ProfileItem> items,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
             ),
           ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: CupertinoColors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: CupertinoColors.systemGrey.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final isLast = index == items.length - 1;
+          Container(
+            decoration: BoxDecoration(
+              color: CupertinoColors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.systemGrey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: items.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final isLast = index == items.length - 1;
 
-              return Column(
-                children: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: item.onTap,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: item.color.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              item.icon,
-                              color: item.color,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              item.title,
-                              style: const TextStyle(
-                                fontFamily: 'Montserrat',
-                                fontSize: 16,
-                                color: AppTheme.textPrimary,
+                return Column(
+                  children: [
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: item.onTap,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: item.color.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                item.icon,
+                                color: item.color,
+                                size: 20,
                               ),
                             ),
-                          ),
-                          const Icon(
-                            CupertinoIcons.chevron_right,
-                            color: AppTheme.textSecondary,
-                            size: 16,
-                          ),
-                        ],
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 16,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              CupertinoIcons.chevron_right,
+                              color: AppTheme.textSecondary,
+                              size: 16,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  if (!isLast)
-                    Container(
-                      margin: const EdgeInsets.only(left: 72),
-                      height: 0.5,
-                      color: AppTheme.textSecondary.withOpacity(0.2),
-                    ),
-                ],
-              );
-            }).toList(),
+                    if (!isLast)
+                      Container(
+                        margin: const EdgeInsets.only(left: 72),
+                        height: 0.5,
+                        color: AppTheme.textSecondary.withOpacity(0.2),
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
