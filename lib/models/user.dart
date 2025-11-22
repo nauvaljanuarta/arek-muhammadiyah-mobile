@@ -16,7 +16,6 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  // Optional relational / virtual
   final Role? role;
   final String? villageName;
   final String? districtId;
@@ -91,4 +90,28 @@ class User {
         'city_id': cityId,
         'city_name': cityName,
       };
+
+    String get locationInfo {
+    final parts = <String>[];
+    if (villageName != null && villageName!.isNotEmpty) parts.add(villageName!);
+    if (districtName != null && districtName!.isNotEmpty) parts.add('Kec. $districtName');
+    if (cityName != null && cityName!.isNotEmpty) parts.add(cityName!);
+    return parts.isNotEmpty ? parts.join(', ') : '-';
+
+  }
+
+  // Format NIK dengan pemisah
+  String get formattedNik {
+    if (nik == null || nik!.isEmpty) return '-';
+    if (nik!.length <= 4) return nik!;
+    
+    // Format: XXXXX-XXXX-XXXX-XXXX
+    final chunks = <String>[];
+    for (int i = 0; i < nik!.length; i += 4) {
+      final end = i + 4 > nik!.length ? nik!.length : i + 4;
+      chunks.add(nik!.substring(i, end));
+    }
+    return chunks.join('-');
+  }
+
 }

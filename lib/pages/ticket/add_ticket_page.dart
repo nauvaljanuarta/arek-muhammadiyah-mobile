@@ -7,19 +7,14 @@ import '../../models/category.dart';
 import '../../services/ticket_service.dart';
 import '../../services/category_service.dart';
 
-class AddTicketPage
-    extends
-        StatefulWidget {
+class AddTicketPage extends StatefulWidget {
   const AddTicketPage({
     super.key,
   });
 
   @override
-  State<
-    AddTicketPage
-  >
-  createState() =>
-      _AddTicketPageState();
+  State<AddTicketPage>
+  createState() => _AddTicketPageState();
 }
 
 class FileValidation {
@@ -33,32 +28,18 @@ class FileValidation {
 }
 
 class _AddTicketPageState
-    extends
-        State<
-          AddTicketPage
-        > {
-  final TextEditingController _titleController =
-      TextEditingController();
-  final TextEditingController _descriptionController =
-      TextEditingController();
-  final ImagePicker _imagePicker =
-      ImagePicker();
+    extends State<AddTicketPage> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
 
-  List<
-    Category
-  >
-  _categories =
-      [];
+  List<Category>
+  _categories =[];
   Category? _selectedCategory;
-  final List<
-    File
-  >
-  _selectedFiles =
-      [];
-  bool _loadingCategories =
-      true;
-  bool _isSubmitting =
-      false;
+  final List<File>
+  _selectedFiles =[];
+  bool _loadingCategories =true;
+  bool _isSubmitting =false;
 
   @override
   void initState() {

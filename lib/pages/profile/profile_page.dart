@@ -96,12 +96,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               _buildHeader(),
                               const SizedBox(height: 24),
+                              _buildProfileInfoSection(),
+                              const SizedBox(height: 24),
                               _buildProfileSection(
                                 title: 'Akun',
                                 items: [
                                   _ProfileItem(
                                     icon: CupertinoIcons.person_circle,
-                                    title: 'Edit Profil',
+                                    title: 'Edit Profile',
                                     color: AppTheme.primaryMedium,
                                     onTap: () async {
                                       final updated = await Navigator.push(
@@ -116,7 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   _ProfileItem(
                                     icon: CupertinoIcons.lock_circle,
-                                    title: 'Ubah Password',
+                                    title: 'Change Password',
                                     color: AppTheme.accent,
                                     onTap: () {},
                                   ),
@@ -124,18 +126,18 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               const SizedBox(height: 16),
                               _buildProfileSection(
-                                title: 'Lainnya',
+                                title: 'Other',
                                 items: [
                                   _ProfileItem(
                                     icon:
                                         CupertinoIcons.square_arrow_right_fill,
-                                    title: 'Keluar',
+                                    title: 'Logout',
                                     color: CupertinoColors.systemRed,
                                     onTap: () => _logout(context),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 80), // ✅ ruang untuk bottom nav
+                              const SizedBox(height: 80),
                             ],
                           ),
                         ),
@@ -185,15 +187,176 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 4),
           Text(
-            _user?.nik ?? '-',
+            _user?.formattedNik ?? '-', 
             style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 14,
               color: CupertinoColors.white,
             ),
           ),
+          const SizedBox(height: 8),
+          if (_user?.role != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: CupertinoColors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _user!.role!.name.toUpperCase(),
+                style: const TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: CupertinoColors.white,
+                ),
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  // ✅ SECTION: Informasi Profil Lengkap
+  Widget _buildProfileInfoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            'Informasi Profil',
+            style: const TextStyle(
+              fontFamily: 'Montserrat',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: CupertinoColors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: CupertinoColors.systemGrey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildInfoItem(
+                icon: CupertinoIcons.phone,
+                title: 'Telepon',
+                value: _user?.telp ?? '-',
+              ),
+              _buildDivider(),
+                _buildInfoItem(
+                icon: CupertinoIcons.calendar,
+                title: 'Tanggal Lahir',
+                value: _user?.birthDate != null 
+                  ? '${_user!.birthDate!.day}/${_user!.birthDate!.month}/${_user!.birthDate!.year}'
+                  : '-',
+                ),
+                _buildDivider(),
+                _buildInfoItem(
+                icon: CupertinoIcons.person_2,
+                title: 'Jenis Kelamin',
+                value: _user?.gender?.name??'-',
+                ),
+              _buildDivider(),
+              _buildInfoItem(
+                icon: CupertinoIcons.briefcase,
+                title: 'Pekerjaan',
+                value: _user?.job ?? '-',
+              ),
+              _buildDivider(),
+              _buildInfoItem(
+                icon: CupertinoIcons.location,
+                title: 'Lokasi',
+                value: _user?.locationInfo ?? '-', 
+                isMultiLine: true,
+              ),
+              _buildDivider(),
+              _buildInfoItem(
+                icon: CupertinoIcons.home,
+                title: 'Alamat',
+                value: _user?.address ?? '-',
+                isMultiLine: true,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    bool isMultiLine = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: isMultiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.primaryMedium,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                    height: isMultiLine ? 1.4 : 1.0,
+                  ),
+                  maxLines: isMultiLine ? 3 : 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      margin: const EdgeInsets.only(left: 72),
+      height: 0.5,
+      color: AppTheme.textSecondary.withOpacity(0.2),
     );
   }
 
