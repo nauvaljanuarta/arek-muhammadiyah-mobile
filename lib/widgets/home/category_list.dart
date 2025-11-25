@@ -69,7 +69,7 @@ class CategoriesList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: CupertinoColors.systemGrey.withOpacity(0.1),
+                              color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),

@@ -260,7 +260,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: CupertinoColors.systemGrey.withOpacity(0.1),
+                color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -328,10 +328,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: CupertinoColors.systemOrange.withOpacity(0.1),
+            color: CupertinoColors.systemOrange.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: CupertinoColors.systemOrange.withOpacity(0.3),
+              color: CupertinoColors.systemOrange.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -362,7 +362,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 13,
-                        color: CupertinoColors.systemOrange.withOpacity(0.8),
+                        color: CupertinoColors.systemOrange.withValues(alpha: 0.8),
                         height: 1.4,
                       ),
                     ),
@@ -489,7 +489,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: CupertinoColors.systemGrey.withOpacity(0.1),
+                                  color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -579,7 +579,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: CupertinoColors.systemGrey.withOpacity(0.1),
+                                    color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),

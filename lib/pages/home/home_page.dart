@@ -134,10 +134,7 @@ class HomeContent extends StatelessWidget {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: FeaturedArticle(),
-              ),
+                 child: StackedFeaturedArticles(), 
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
             const SliverToBoxAdapter(
@@ -242,14 +239,14 @@ class HomeContent extends StatelessWidget {
           future: ArticleService.getArticles(limit: 5, published: true),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Container(
+              return SizedBox(
                 height: 200,
                 child: const Center(child: CupertinoActivityIndicator()),
               );
             }
             
             if (snapshot.hasError) {
-              return Container(
+              return SizedBox(
                 height: 200,
                 child: Center(
                   child: Text(
@@ -264,7 +261,7 @@ class HomeContent extends StatelessWidget {
             }
             
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Container(
+              return SizedBox(
                 height: 200,
                 child: const Center(
                   child: Column(

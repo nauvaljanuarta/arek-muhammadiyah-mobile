@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import '../../config/theme/theme.dart';
 import '../../models/user.dart';
 import '../../services/user_service.dart';
@@ -98,7 +97,7 @@ class _ProfilePageState extends State<ProfilePage> {
           // Content
           if (_isLoading)
             SliverToBoxAdapter(
-              child: Container(
+              child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.6,
                 child: const Center(
                   child: CupertinoActivityIndicator(),
@@ -107,7 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
             )
           else if (_user == null)
             SliverToBoxAdapter(
-              child: Container(
+              child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.6,
                 child: const Center(
                   child: Text(
@@ -266,7 +265,7 @@ class _ProfilePageState extends State<ProfilePage> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: CupertinoColors.systemGrey.withOpacity(0.1),
+                  color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -414,7 +413,7 @@ class _ProfilePageState extends State<ProfilePage> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: CupertinoColors.systemGrey.withOpacity(0.1),
+                  color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),

@@ -1,81 +1,57 @@
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../../models/article.dart';
+import 'package:flutter/material.dart';
 
-class ArticleCard extends StatelessWidget {
+class ArticleCard extends StatefulWidget {
   final Article article;
   final VoidCallback onTap;
+  final bool isFeatured;
 
   const ArticleCard({
     super.key,
     required this.article,
     required this.onTap,
+    this.isFeatured = false,
   });
 
   @override
+  State<ArticleCard> createState() => _ArticleCardState();
+}
+
+class _ArticleCardState extends State<ArticleCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: CupertinoColors.systemGrey.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: onTap,
-        child: Padding(
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
           padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: CupertinoColors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: CupertinoColors.systemGrey.withOpacity(_isHovered ? 0.15 : 0.2),
+                blurRadius: _isHovered ? 20 : 10,
+                offset: Offset(0, _isHovered ? 8 : 4),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
           child: Row(
             children: [
-              // Article Image
-              _buildArticleImage(),
+              // Image section
+              _buildImageSection(),
               const SizedBox(width: 16),
-              
-              // Article Content
+              // Content section
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Category
-                    if (article.categoryName != 'Uncategorized')
-                      _buildCategoryChip(),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // Title
-                    Text(
-                      article.title,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // Author & Date
-                    _buildArticleMeta(),
-                  ],
-                ),
-              ),
-              
-              // Chevron Icon
-              const Icon(
-                CupertinoIcons.chevron_right,
-                color: AppTheme.textSecondary,
-                size: 16,
+                child: _buildContentSection(),
               ),
             ],
           ),
@@ -84,106 +60,129 @@ class ArticleCard extends StatelessWidget {
     );
   }
 
-  Widget _buildArticleImage() {
-    return Container(
-      width: 90,
-      height: 90,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image: article.featureImage != null && article.featureImage!.isNotEmpty
-            ? DecorationImage(
-                image: NetworkImage(article.featureImage!),
+  Widget _buildImageSection() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 100,
+        height: 100,
+        child: widget.article.featureImage != null && widget.article.featureImage!.isNotEmpty
+            ? Image.network(
+                widget.article.featureImage!,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildPlaceholderImage();
+                },
               )
-            : null,
-        color: article.featureImage == null ? AppTheme.primaryLight : null,
-        gradient: article.featureImage == null
-            ? LinearGradient(
-                colors: [
-                  AppTheme.primaryLight.withOpacity(0.8),
-                  AppTheme.primaryDark.withOpacity(0.6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
+            : _buildPlaceholderImage(),
       ),
-      child: article.featureImage == null
-          ? const Center(
-              child: Icon(
-                CupertinoIcons.doc_text_fill,
-                color: CupertinoColors.white,
-                size: 32,
-              ),
-            )
-          : null,
     );
   }
 
-  Widget _buildCategoryChip() {
+  Widget _buildPlaceholderImage() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.primaryLight.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.primaryLight.withOpacity(0.3),
-          width: 1,
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryLight.withOpacity(0.25),
+            AppTheme.primaryLight.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-      child: Text(
-        article.categoryName,
-        style: const TextStyle(
-          fontFamily: 'Montserrat',
-          fontSize: 10,
+      child: const Center(
+        child: Icon(
+          CupertinoIcons.doc_text_fill,
           color: AppTheme.primaryDark,
-          fontWeight: FontWeight.w600,
+          size: 24,
         ),
       ),
     );
   }
 
-  Widget _buildArticleMeta() {
-    return Row(
+  Widget _buildContentSection() {
+    final plainTextContent = _parseHtmlToPlainText(widget.article.content);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        // Author
-        const Icon(
-          CupertinoIcons.person_circle,
-          size: 14,
-          color: AppTheme.textSecondary,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            article.authorName,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 12),
-        
-        // Date
-        const Icon(
-          CupertinoIcons.calendar,
-          size: 12,
-          color: AppTheme.textSecondary,
-        ),
-        const SizedBox(width: 4),
+        // Title
         Text(
-          article.formattedDate,
+          widget.article.title,
           style: const TextStyle(
             fontFamily: 'Montserrat',
-            fontSize: 11,
-            color: AppTheme.textSecondary,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          plainTextContent,
+          style: const TextStyle(
+            fontFamily: 'Montserrat',
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w400,
+            height: 1.4,
+          ),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        // Category and metadata in row
+        Row(
+          children: [
+            Text(
+              widget.article.categoryName,
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              '•',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              widget.article.formattedDate,
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  String _parseHtmlToPlainText(String htmlString) {
+    String text = htmlString
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .trim();
+    
+    text = text.replaceAll(RegExp(r'\s+'), ' ');
+    
+    return text.isNotEmpty ? text : 'Tidak ada konten yang tersedia';
   }
 }
