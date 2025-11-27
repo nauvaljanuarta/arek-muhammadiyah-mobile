@@ -1,6 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show Divider;
-import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+import 'dart:io';
 import '../../config/theme/theme.dart';
 import '../../models/ticket.dart';
 import '../../models/category.dart';
@@ -10,7 +14,7 @@ import '../../services/category_service.dart';
 import '../../services/ticket_service.dart';
 
 class TicketDetailPage extends StatefulWidget {
-  final Ticket ticket; 
+  final Ticket ticket;
 
   const TicketDetailPage({
     super.key,
@@ -88,7 +92,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       try {
         await TicketService.deleteTicket(widget.ticket.id.toString());
         
-        // Kembali ke halaman sebelumnya dengan status sukses
         if (mounted) {
           Navigator.pop(context, true);
         }
@@ -114,6 +117,106 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         }
       }
     }
+  }
+
+  Future<void> _openDocument(Document document) async {
+    try {
+      showCupertinoDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const CupertinoAlertDialog(
+          title: Text('Downloading File'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoActivityIndicator(),
+              SizedBox(height: 16),
+              Text('Please wait...'),
+            ],
+          ),
+        ),
+      );
+
+      final file = await _downloadFile(document);
+      
+      if (mounted) Navigator.pop(context);
+      
+      if (file != null) {
+        final openResult = await OpenFile.open(file.path);
+        
+        if (openResult.type != ResultType.done) {
+          _showOpenManualDialog(file.path, document.fileName);
+        }
+      } else {
+        _showErrorDialog(
+          'Download Gagal', 
+          'Gagal mendownload file ${document.fileName}'
+        );
+      }
+
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      
+      _showErrorDialog(
+        'Error', 
+        'Gagal mendownload file:\n${e.toString()}'
+      );
+    }
+  }
+
+  Future<File?> _downloadFile(Document document) async {
+  try {
+    // Selalu gunakan temporary directory - tidak butuh permission
+    final Directory dir = await getTemporaryDirectory();
+    final safeFileName = _getSafeFileName(document.fileName);
+    final filePath = '${dir.path}/$safeFileName';
+    
+    final dio = Dio();
+    await dio.download(document.downloadUrl, filePath);
+    
+    return File(filePath);
+  } catch (e) {
+    rethrow;
+  }
+}
+
+  String _getSafeFileName(String fileName) {
+    return fileName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+  }
+
+  void _showOpenManualDialog(String filePath, String fileName) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Buka File Manual'),
+        content: Text(
+          'File "$fileName" berhasil didownload tapi tidak bisa dibuka otomatis. '
+          'Silakan buka manual dari folder download.',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatDate(DateTime date) {
@@ -163,53 +266,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _openDocument(Document document) async {
-    try {
-      if (document.fileUrl.isNotEmpty) {
-        final Uri url = Uri.parse(document.fileUrl);
-        
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url);
-        } else {
-          throw 'Tidak dapat membuka file: ${document.fileName}';
-        }
-      } else {
-        // Jika tidak ada URL, tampilkan pesan bahwa file tidak tersedia
-        if (mounted) {
-          showCupertinoDialog(
-            context: context,
-            builder: (context) => CupertinoAlertDialog(
-              title: const Text('File Tidak Tersedia'),
-              content: Text('File ${document.fileName} tidak dapat dibuka.'),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        showCupertinoDialog(
-          context: context,
-          builder: (context) => CupertinoAlertDialog(
-            title: const Text('Gagal Membuka File'),
-            content: Text('Terjadi kesalahan: ${e.toString()}'),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
   }
 
   Widget _buildDocumentItem(Document document) {
@@ -525,7 +581,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Status Chip
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
@@ -544,7 +599,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Title
                           Text(
                             widget.ticket.title,
                             style: const TextStyle(
@@ -556,7 +610,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Details Card
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -602,7 +655,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Description
                           const Text(
                             'Description',
                             style: TextStyle(

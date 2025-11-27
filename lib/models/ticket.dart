@@ -16,6 +16,7 @@ class Ticket {
   final DateTime? resolvedAt;
   final List<Document> documents;
   final Category? category; 
+
   Ticket({
     required this.id,
     required this.userId,
@@ -33,15 +34,53 @@ class Ticket {
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
-    // Extract category name from nested category object
-    final categoryName = json['category'] != null 
-        ? json['category']['name']?.toString()
-        : json['category_name']; // Fallback to direct field
-    
+    // Parse documents
+    List<Document> documents = [];
+    if (json['documents'] != null && json['documents'] is List) {
+      documents = (json['documents'] as List)
+          .map((doc) => Document.fromJson(doc))
+          .toList();
+    }
+
+    // Parse category
+    Category? category;
+    if (json['category'] != null && json['category'] is Map<String, dynamic>) {
+      category = Category.fromJson(json['category']);
+    }
+
+    // Extract category name
+    final categoryName = category?.name ?? 
+                        json['category_name']?.toString() ?? 
+                        (json['category'] is Map ? json['category']['name']?.toString() : null);
+
+    // Parse ticket ID - handle berbagai kemungkinan format
+    int ticketId = 0;
+    if (json['id'] is int) {
+      ticketId = json['id'];
+    } else if (json['id'] is String) {
+      ticketId = int.tryParse(json['id']) ?? 0;
+    }
+
+    // Parse user ID
+    String userId = '';
+    if (json['user_id'] is String) {
+      userId = json['user_id'];
+    } else if (json['user_id'] != null) {
+      userId = json['user_id'].toString();
+    }
+
+    // Parse category ID
+    int? categoryId;
+    if (json['category_id'] is int) {
+      categoryId = json['category_id'];
+    } else if (json['category_id'] is String) {
+      categoryId = int.tryParse(json['category_id']);
+    }
+
     return Ticket(
-      id: json['id'] as int? ?? 0, 
-      userId: json['user_id']?.toString() ?? '',
-      categoryId: json['category_id'] as int?, 
+      id: ticketId,
+      userId: userId,
+      categoryId: categoryId,
       categoryName: categoryName,
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
@@ -52,14 +91,8 @@ class Ticket {
       resolvedAt: json['resolved_at'] != null
           ? DateTime.parse(json['resolved_at'].toString())
           : null,
-      documents: json['documents'] != null
-          ? (json['documents'] as List)
-              .map((doc) => Document.fromJson(doc))
-              .toList()
-          : [],
-      category: json['category'] != null 
-          ? Category.fromJson(json['category'])
-          : null, 
+      documents: documents,
+      category: category,
     );
   }
 
@@ -78,4 +111,42 @@ class Ticket {
         'documents': documents.map((doc) => doc.toJson()).toList(),
         'category': category?.toJson(),
       };
+
+  // Copy with method untuk update data
+  Ticket copyWith({
+    int? id,
+    String? userId,
+    int? categoryId,
+    String? categoryName,
+    String? title,
+    String? description,
+    TicketStatus? status,
+    String? resolution,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? resolvedAt,
+    List<Document>? documents,
+    Category? category,
+  }) {
+    return Ticket(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      resolution: resolution ?? this.resolution,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      documents: documents ?? this.documents,
+      category: category ?? this.category,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Ticket(id: $id, title: $title, status: $status, documents: ${documents.length})';
+  }
 }
