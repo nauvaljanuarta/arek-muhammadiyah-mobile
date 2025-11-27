@@ -103,11 +103,6 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
             children: [
               const Row(
                 children: [
-                  Icon(
-                    CupertinoIcons.star_fill,
-                    size: 20,
-                    color: AppTheme.primaryDark,
-                  ),
                   SizedBox(width: 8),
                   Text(
                     'Artikel Pilihan',

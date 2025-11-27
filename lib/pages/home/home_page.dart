@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:MuhammadiyahApp/pages/ticket/add_ticket_page.dart';
 import 'package:MuhammadiyahApp/services/user_service.dart';
+import 'package:MuhammadiyahApp/services/ticket_service.dart';
 import 'package:flutter/cupertino.dart';
 import '../../config/theme/theme.dart';
 import '../article/article_page.dart';
@@ -21,15 +24,74 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _currentIndex = 0;
+  
+  int _updatedTicketsCount = 0;
+  Timer? _refreshTimer;
 
-  final List<Widget> _pages = [
+  List<Widget> get _pages => [
     const HomeContent(),
     const ArticlePage(),
-    const TicketPage(),
+    TicketPage(onTicketOpened: _onTicketOpened),
     const ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadUpdatedCount();
+    _startWhatsAppAutoRefresh(); 
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _startWhatsAppAutoRefresh() {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      print('🔄 WhatsApp-style auto refresh checking for new updates...');
+      _loadUpdatedCount();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUpdatedCount();
+    }
+  }
+
+  Future<void> _loadUpdatedCount() async {
+    try {
+      final count = await TicketService.getUpdatedTicketsCount();
+      if (mounted) {
+        setState(() {
+          _updatedTicketsCount = count;
+        });
+      }
+    } catch (e) {
+      print('Error loading updated count: $e');
+    }
+  }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    
+    if (index == 2) {
+      _loadUpdatedCount();
+    }
+  }
+
+  void _onTicketOpened() {
+    _loadUpdatedCount();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,18 +109,17 @@ class _HomePageState extends State<HomePage> {
               right: 0,
               child: CustomBottomNav(
                 currentIndex: _currentIndex,
-                onTap: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
+                onTap: _onTabTapped,
                 onAddTicketPressed: () {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
                       builder: (context) => AddTicketPage(),
                     ),
-                  );
+                  ).then((_) {
+                    _loadUpdatedCount();
+                  });
                 },
+                updatedCount: _updatedTicketsCount, 
               ),
             ),
           ],
@@ -123,7 +184,7 @@ class HomeContent extends StatelessWidget {
                         fontFamily: 'Montserrat',
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: CupertinoColors.black.withValues(alpha: 0.7),
+                        color: CupertinoColors.black.withOpacity(0.7),
                         height: 1.5,
                         letterSpacing: 0.3,
                       ),
@@ -166,11 +227,6 @@ class HomeContent extends StatelessWidget {
                   children: [
                     const Row(
                       children: [
-                        Icon(
-                          CupertinoIcons.news,
-                          color: AppTheme.primaryDark,
-                          size: 20,
-                        ),
                         SizedBox(width: 8),
                         Text(
                           'Artikel Terbaru',
@@ -220,93 +276,87 @@ class HomeContent extends StatelessWidget {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             
-            // Recent Articles Section dengan ArticleCard
-            _buildRecentArticlesSection(),
+            SliverList(
+              delegate: SliverChildListDelegate([
+                FutureBuilder<List<Article>>(
+                  future: ArticleService.getArticles(limit: 5, published: true),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox(
+                        height: 200,
+                        child: const Center(child: CupertinoActivityIndicator()),
+                      );
+                    }
+                    
+                    if (snapshot.hasError) {
+                      return SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return SizedBox(
+                        height: 200,
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                CupertinoIcons.doc_text,
+                                size: 48,
+                                color: AppTheme.textSecondary,
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                'Belum ada artikel tersedia',
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    final articles = snapshot.data!;
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        children: articles.map((article) => ArticleCard(
+                          article: article,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => DetailArticlePage(article: article),
+                              ),
+                            );
+                          },
+                        )).toList(),
+                      ),
+                    );
+                  },
+                ),
+              ]),
+            ),
             
             const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         ),
         CustomAppBar(currentUser: currentUser),
       ],
-    );
-  }
-
-  // Method untuk section artikel terbaru
-  SliverList _buildRecentArticlesSection() {
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        FutureBuilder<List<Article>>(
-          future: ArticleService.getArticles(limit: 5, published: true),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return SizedBox(
-                height: 200,
-                child: const Center(child: CupertinoActivityIndicator()),
-              );
-            }
-            
-            if (snapshot.hasError) {
-              return SizedBox(
-                height: 200,
-                child: Center(
-                  child: Text(
-                    'Error: ${snapshot.error}',
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ),
-              );
-            }
-            
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return SizedBox(
-                height: 200,
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        CupertinoIcons.doc_text,
-                        size: 48,
-                        color: AppTheme.textSecondary,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Belum ada artikel tersedia',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            
-            final articles = snapshot.data!;
-            
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                children: articles.map((article) => ArticleCard(
-                  article: article,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (context) => DetailArticlePage(article: article),
-                      ),
-                    );
-                  },
-                )).toList(),
-              ),
-            );
-          },
-        ),
-      ]),
     );
   }
 }

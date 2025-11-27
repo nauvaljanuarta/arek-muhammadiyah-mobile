@@ -1,12 +1,15 @@
-  import 'dart:convert';
-  import 'dart:io';
-  import '../models/ticket.dart';
-  import '../models/document.dart';
-  import '../services/api_client.dart';
-  import '../services/user_service.dart';
-  import 'package:http/http.dart' as http;
-  import 'package:mime/mime.dart';
-  import 'package:http_parser/http_parser.dart';
+import 'dart:convert';
+import 'dart:io';
+import '../models/ticket.dart';
+import '../models/document.dart';
+import '../services/api_client.dart';
+import '../services/user_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
+import '../models/enums.dart';
+import 'ticket_read_service.dart';
+
 
   class TicketService {
     static final ApiClient _client = ApiClient();
@@ -228,4 +231,47 @@
     }
 
 
+static Future<int> getUpdatedTicketsCount() async {
+  try {
+    final response = await _client.get('/tickets/my?limit=100');
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      final List ticketsData = data['data'] ?? [];
+      final tickets = ticketsData.map((e) => Ticket.fromJson(e)).toList();
+      
+      // Dapatkan ticket yang sudah dibaca
+      final readTicketIds = await TicketReadService.getReadTicketIds();
+      
+      int updatedCount = 0;
+      
+      for (final ticket in tickets) {
+        final hasUpdate = ticket.hasUpdates;
+        final isRead = readTicketIds.contains(ticket.id);
+        
+
+        if (hasUpdate) {
+          if (isRead) {
+            print('🔄 Ticket ${ticket.id} has NEW UPDATES - resetting to unread');
+            await TicketReadService.markTicketAsUnreadForNewUpdates(ticket.id);
+          }
+          updatedCount++;
+        }
+      }
+      
+      print('📊 Total tickets: ${tickets.length}');
+      print('📊 Tickets with NEW updates: $updatedCount');
+      
+      return updatedCount;
+    }
+    return 0;
+  } catch (e) {
+    print('Error in getUpdatedTicketsCount: $e');
+    return 0;
   }
+}
+}
+
+
+ 
+

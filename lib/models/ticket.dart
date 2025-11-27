@@ -15,7 +15,11 @@ class Ticket {
   final DateTime updatedAt; 
   final DateTime? resolvedAt;
   final List<Document> documents;
-  final Category? category; 
+  final Category? category;
+
+  // ❌ HAPUS field ini karena tidak ada di database
+  // final bool hasUpdates;
+  // final bool isRead;
 
   Ticket({
     required this.id,
@@ -31,6 +35,7 @@ class Ticket {
     this.resolvedAt,
     this.documents = const [],
     this.category,
+    // ❌ HAPUS parameter ini
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -53,7 +58,7 @@ class Ticket {
                         json['category_name']?.toString() ?? 
                         (json['category'] is Map ? json['category']['name']?.toString() : null);
 
-    // Parse ticket ID - handle berbagai kemungkinan format
+    // Parse ticket ID
     int ticketId = 0;
     if (json['id'] is int) {
       ticketId = json['id'];
@@ -93,6 +98,7 @@ class Ticket {
           : null,
       documents: documents,
       category: category,
+      // ❌ HAPUS field yang tidak ada di database
     );
   }
 
@@ -110,6 +116,7 @@ class Ticket {
         'resolved_at': resolvedAt?.toIso8601String(),
         'documents': documents.map((doc) => doc.toJson()).toList(),
         'category': category?.toJson(),
+        // ❌ HAPUS field yang tidak ada di database
       };
 
   // Copy with method untuk update data
@@ -145,8 +152,25 @@ class Ticket {
     );
   }
 
+  // ✅ GETTER untuk menentukan apakah ticket ada update
+  // Berdasarkan status dan resolution saja (tanpa field database)
+  bool get hasUpdates {
+    return status != TicketStatus.unread || 
+           (resolution != null && resolution!.isNotEmpty);
+  }
+
+  // ✅ GETTER untuk menentukan apakah ticket sudah dibaca
+  // Kita anggap ticket sudah "dibaca" jika status-nya unread (masih baru)
+  // Atau jika sudah ada interaksi (bisa disesuaikan logic-nya)
+  bool get isRead {
+    // Logic sederhana: Ticket dianggap "belum dibaca" jika masih unread
+    // dan belum ada resolution
+    return status != TicketStatus.unread || 
+           (resolution != null && resolution!.isNotEmpty);
+  }
+
   @override
   String toString() {
-    return 'Ticket(id: $id, title: $title, status: $status, documents: ${documents.length})';
+    return 'Ticket(id: $id, title: $title, status: $status, hasUpdates: $hasUpdates)';
   }
 }

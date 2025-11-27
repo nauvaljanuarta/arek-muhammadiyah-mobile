@@ -4,10 +4,13 @@ import '../../widgets/ticket/ticket_card.dart';
 import 'add_ticket_page.dart';
 import '../../pages/ticket/detail_ticket_page.dart';
 import '../../services/ticket_service.dart';
+import '../../services/ticket_read_service.dart';
 import '../../models/ticket.dart' as ticket_model;
 
 class TicketPage extends StatefulWidget {
-  const TicketPage({super.key});
+  final VoidCallback? onTicketOpened;
+
+  const TicketPage({super.key, this.onTicketOpened});
 
   @override
   State<TicketPage> createState() => _TicketPageState();
@@ -15,6 +18,7 @@ class TicketPage extends StatefulWidget {
 
 class _TicketPageState extends State<TicketPage> {
   List<ticket_model.Ticket> userTickets = [];
+  Set<int> readTickets = {};
   bool isLoading = true;
   String? errorMessage;
 
@@ -22,6 +26,14 @@ class _TicketPageState extends State<TicketPage> {
   void initState() {
     super.initState();
     _loadUserTickets();
+    _loadReadTickets();
+  }
+
+  Future<void> _loadReadTickets() async {
+    final readIds = await TicketReadService.getReadTicketIds();
+    setState(() {
+      readTickets = readIds.toSet();
+    });
   }
 
   Future<void> _loadUserTickets() async {
@@ -47,6 +59,34 @@ class _TicketPageState extends State<TicketPage> {
 
   Future<void> _refreshTickets() async {
     await _loadUserTickets();
+    await _loadReadTickets();
+    
+    widget.onTicketOpened?.call();
+  }
+
+  void _onTicketTap(ticket_model.Ticket ticket) async {
+    await TicketReadService.markTicketAsRead(ticket.id);
+    
+    setState(() {
+      readTickets.add(ticket.id);
+    });
+
+    widget.onTicketOpened?.call();
+
+    final result = await Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => TicketDetailPage(ticket: ticket),
+      ),
+    );
+
+    if (result != null) {
+      _refreshTickets();
+    }
+  }
+
+  bool _shouldShowBadge(ticket_model.Ticket ticket) {
+    return ticket.hasUpdates && !readTickets.contains(ticket.id);
   }
 
   @override
@@ -62,7 +102,7 @@ class _TicketPageState extends State<TicketPage> {
             slivers: [
               CupertinoSliverNavigationBar(
                 largeTitle: const Text(
-                  'Ticket',
+                  'My Tickets',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
                     fontWeight: FontWeight.bold,
@@ -75,6 +115,10 @@ class _TicketPageState extends State<TicketPage> {
                     width: 0.5,
                   ),
                 ),
+              ),
+
+              CupertinoSliverRefreshControl(
+                onRefresh: _refreshTickets,
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 8)),
@@ -101,7 +145,7 @@ class _TicketPageState extends State<TicketPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
+                            color: CupertinoColors.systemGrey.withOpacity(0.1),
                             blurRadius: 12,
                             offset: const Offset(0, 3),
                           ),
@@ -148,7 +192,7 @@ class _TicketPageState extends State<TicketPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: CupertinoColors.systemGrey.withValues(alpha: 0.1),
+                            color: CupertinoColors.systemGrey.withOpacity(0.1),
                             blurRadius: 12,
                             offset: const Offset(0, 3),
                           ),
@@ -173,7 +217,7 @@ class _TicketPageState extends State<TicketPage> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Tap tombol "+" di kanan bawah untuk membuat pengajuan tiket baru.',
+                            'Tap the "+" button below to create a new ticket.',
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 14,
@@ -193,33 +237,18 @@ class _TicketPageState extends State<TicketPage> {
                       final ticket = userTickets[index];
                       return TicketCard(
                         ticket: ticket,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => TicketDetailPage(
-                                ticket: ticket,
-                              ),
-                            ),
-                          );
-                          if (result != null && result is ticket_model.Ticket) {
-                            setState(() {
-                              userTickets[index] = result;
-                            });
-                          }
-                        },
+                        onTap: () => _onTicketTap(ticket),
+                        showBadge: _shouldShowBadge(ticket),
                       );
                     },
                     childCount: userTickets.length,
                   ),
                 ),
 
-              // Hapus SliverToBoxAdapter untuk button Add Tickets yang lama
               const SliverToBoxAdapter(child: SizedBox(height: 80)),
             ],
           ),
 
-          // Floating Action Button
           if (!isLoading && errorMessage == null)
             Positioned(
               bottom: 20,

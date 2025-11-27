@@ -1,58 +1,63 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../config/connection/db.dart';
 import '../models/article.dart';
+import '../services/api_client.dart';
 
 class ArticleService {
+  static final ApiClient _client = ApiClient();
+
   static Future<List<Article>> getArticles({
     int page = 1,
     int limit = 10,
     bool? published,
   }) async {
-    final url = Uri.parse(
-      '${Connection.baseUrl}/articles?page=$page&limit=$limit${published != null ? '&published=$published' : ''}',
+    final response = await _client.get(
+      '/articles?page=$page&limit=$limit${published != null ? '&published=$published' : ''}',
     );
 
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      if (data['success'] == true && data['data'] != null) {
-        final articles = (data['data'] as List)
-            .map((e) => Article.fromJson(e))
-            .toList();
-        return articles;
-      } else {
-        return [];
-      }
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      final List articles = data['data'] ?? [];
+      return articles.map((e) => Article.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to Fetch Articles (${response.statusCode})');
+      throw Exception(data['message'] ?? 'Failed to fetch articles');
+    }
+  }
+
+  static Future<List<Article>> getArticlesByCategory(
+    int categoryId, {
+    int page = 1,
+    int limit = 10,
+    bool? published,
+  }) async {
+    final response = await _client.get(
+      '/articles/category/$categoryId?page=$page&limit=$limit${published != null ? '&published=$published' : ''}',
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      final List articles = data['data'] ?? [];
+      return articles.map((e) => Article.fromJson(e)).toList();
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch articles by category');
     }
   }
 
   static Future<Article?> getArticleById(int id) async {
-    final url = Uri.parse('${Connection.baseUrl}/articles/$id');
-    final response = await http.get(url);
+    final response = await _client.get('/articles/$id');
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true && data['data'] != null) {
-        return Article.fromJson(data['data']);
-      }
+    if (response.statusCode == 200 && data['success'] == true) {
+      return Article.fromJson(data['data']);
     }
     return null;
   }
 
   static Future<Article?> getArticleBySlug(String slug) async {
-    final url = Uri.parse('${Connection.baseUrl}/articles/slug/$slug');
-    final response = await http.get(url);
+    final response = await _client.get('/articles/slug/$slug');
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true && data['data'] != null) {
-        return Article.fromJson(data['data']);
-      }
+    if (response.statusCode == 200 && data['success'] == true) {
+      return Article.fromJson(data['data']);
     }
     return null;
   }
@@ -65,27 +70,20 @@ class ArticleService {
     String? featureImage,
     bool isPublished = false,
   }) async {
-    final url = Uri.parse('${Connection.baseUrl}/articles');
-    final body = jsonEncode({
+    final body = {
       'user_id': userId,
       'title': title,
       'content': content,
       'category_id': categoryId,
       'feature_image': featureImage,
       'is_published': isPublished,
-    });
+    };
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: body,
-    );
+    final response = await _client.post('/articles', body: body);
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true && data['data'] != null) {
-        return Article.fromJson(data['data']);
-      }
+    if (response.statusCode == 201 && data['success'] == true) {
+      return Article.fromJson(data['data']);
     }
     return null;
   }
@@ -98,37 +96,29 @@ class ArticleService {
     String? featureImage,
     bool isPublished = false,
   }) async {
-    final url = Uri.parse('${Connection.baseUrl}/articles/$id');
-    final body = jsonEncode({
+    final body = {
       'title': title,
       'content': content,
       'category_id': categoryId,
       'feature_image': featureImage,
       'is_published': isPublished,
-    });
+    };
 
-    final response = await http.put(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: body,
-    );
+    final response = await _client.put('/articles/$id', body: body);
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true && data['data'] != null) {
-        return Article.fromJson(data['data']);
-      }
+    if (response.statusCode == 200 && data['success'] == true) {
+      return Article.fromJson(data['data']);
     }
     return null;
   }
 
   static Future<bool> deleteArticle(int id) async {
-    final url = Uri.parse('${Connection.baseUrl}/articles/$id');
-    final response = await http.delete(url);
+    final response = await _client.delete('/articles/$id');
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['success'] == true;
+    if (response.statusCode == 200 && data['success'] == true) {
+      return true;
     }
     return false;
   }

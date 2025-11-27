@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import '../../../config/theme/theme.dart';
 import '../../../services/category_service.dart';
 import '../../../models/category.dart';
+import '../../../pages/article/article_page.dart';
+
 
 class CategoriesList extends StatelessWidget {
   const CategoriesList({super.key});
@@ -19,6 +21,19 @@ class CategoriesList extends StatelessWidget {
       default:
         return CupertinoIcons.circle_fill;
     }
+  }
+
+  void _onCategoryPressed(BuildContext context, Category category) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => ArticlePage(
+          
+          categoryId: category.id, 
+          categoryName: category.name, 
+        ),
+      ),
+    );
   }
 
   @override
@@ -58,7 +73,7 @@ class CategoriesList extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 16),
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
-                  onPressed: () {},
+                  onPressed: () => _onCategoryPressed(context, category),
                   child: Column(
                     children: [
                       Container(
