@@ -42,7 +42,6 @@ class TicketCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Judul + Status
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -66,12 +65,12 @@ class TicketCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      ticket.status.label, // pake label dari extension
+                      ticket.status.label, 
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: ticket.status.color, // pake color dari extension
+                        color: ticket.status.color, 
                       ),
                     ),
                   ),

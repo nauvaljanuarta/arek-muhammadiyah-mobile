@@ -5,7 +5,8 @@ import 'package:flutter/material.dart' show Colors;
 import '../../config/theme/theme.dart';
 import '../../services/article_service.dart';
 import '../../models/article.dart';
-import 'dart:ui'; // Import untuk BackdropFilter
+import '../../pages/article/detail_article_page.dart';
+import 'dart:ui';
 
 class StackedFeaturedArticles extends StatefulWidget {
   const StackedFeaturedArticles({super.key});
@@ -121,15 +122,15 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
               ),
               CupertinoButton(
                 padding: EdgeInsets.zero,
+                onPressed: _onSwipe,
                 child: const Text(
-                  'Swipe untuk lihat lainnya',
+                  'Swipe it for other articles',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 12,
-                    color: AppTheme.primaryMedium, // Ganti dari primaryColor ke primaryMedium
+                    color: AppTheme.primaryMedium, 
                   ),
                 ),
-                onPressed: _onSwipe,
               ),
             ],
           ),
@@ -217,12 +218,11 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
     return GestureDetector(
       onTap: stackIndex == 0
           ? () {
-              // Navigasi ke detail artikel
-              // Navigator.of(context).push(
-              //   CupertinoPageRoute(
-              //     builder: (context) => DetailArticlePage(article: article),
-              //   ),
-              // );
+              Navigator.of(context).push(
+                CupertinoPageRoute(
+                  builder: (context) => DetailArticlePage(article: article),
+                ),
+              );
             }
           : null,
       child: Container(

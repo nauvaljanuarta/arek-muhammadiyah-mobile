@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show Divider;
+import 'package:url_launcher/url_launcher.dart';
 import '../../config/theme/theme.dart';
 import '../../models/ticket.dart';
 import '../../models/category.dart';
@@ -164,48 +165,103 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     );
   }
 
-  Widget _buildDocumentItem(Document document) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppTheme.primaryLight.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          _getFileIcon(document.fileName),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  document.fileName,
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  _formatFileSize(document.fileSize),
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                  ),
+  Future<void> _openDocument(Document document) async {
+    try {
+      if (document.fileUrl.isNotEmpty) {
+        final Uri url = Uri.parse(document.fileUrl);
+        
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url);
+        } else {
+          throw 'Tidak dapat membuka file: ${document.fileName}';
+        }
+      } else {
+        // Jika tidak ada URL, tampilkan pesan bahwa file tidak tersedia
+        if (mounted) {
+          showCupertinoDialog(
+            context: context,
+            builder: (context) => CupertinoAlertDialog(
+              title: const Text('File Tidak Tersedia'),
+              content: Text('File ${document.fileName} tidak dapat dibuka.'),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
                 ),
               ],
             ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('Gagal Membuka File'),
+            content: Text('Terjadi kesalahan: ${e.toString()}'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
+        );
+      }
+    }
+  }
+
+  Widget _buildDocumentItem(Document document) {
+    return GestureDetector(
+      onTap: () => _openDocument(document),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: CupertinoColors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: AppTheme.primaryLight.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          children: [
+            _getFileIcon(document.fileName),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    document.fileName,
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    _formatFileSize(document.fileSize),
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              CupertinoIcons.chevron_right,
+              color: AppTheme.textSecondary,
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -213,11 +269,32 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
   Widget _getFileIcon(String fileName) {
     final extension = fileName.toLowerCase().split('.').last;
     final isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(extension);
+    final isPdf = extension == 'pdf';
+    final isWord = ['doc', 'docx'].contains(extension);
+    final isExcel = ['xls', 'xlsx'].contains(extension);
     
     if (isImage) {
       return const Icon(
         CupertinoIcons.photo,
         color: CupertinoColors.systemBlue,
+        size: 24,
+      );
+    } else if (isPdf) {
+      return const Icon(
+        CupertinoIcons.doc_text,
+        color: CupertinoColors.systemRed,
+        size: 24,
+      );
+    } else if (isWord) {
+      return const Icon(
+        CupertinoIcons.doc,
+        color: CupertinoColors.systemBlue,
+        size: 24,
+      );
+    } else if (isExcel) {
+      return const Icon(
+        CupertinoIcons.chart_bar_alt_fill,
+        color: CupertinoColors.systemGreen,
         size: 24,
       );
     } else {
@@ -376,9 +453,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     );
   }
 
-  // ✅ TOMBOL DELETE
   Widget _buildDeleteButton() {
-    // Hanya tampilkan tombol delete jika status masih unread
     if (widget.ticket.status != TicketStatus.unread) {
       return const SizedBox();
     }

@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 import '../auth/login_page.dart';
-import '../home/home_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -44,7 +43,7 @@ class _SplashPageState extends State<SplashPage> {
 
         Navigator.of(context).pushReplacement(
           CupertinoPageRoute(
-            builder: (_) => isLoggedIn ? const HomePage() : const LoginPage(),
+            builder: (_) =>  const LoginPage(),
           ),
         );
       }

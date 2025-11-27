@@ -37,7 +37,7 @@ class _ArticleCardState extends State<ArticleCard> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: CupertinoColors.systemGrey.withOpacity(_isHovered ? 0.15 : 0.2),
+                color: CupertinoColors.systemGrey.withValues(alpha: _isHovered ? 0.15 : 0.2),
                 blurRadius: _isHovered ? 20 : 10,
                 offset: Offset(0, _isHovered ? 8 : 4),
                 spreadRadius: 0,

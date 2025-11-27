@@ -82,7 +82,7 @@ extension TicketStatusExtension on TicketStatus {
   Color get color {
     switch (this) {
       case TicketStatus.unread:
-        return const Color(0xFF9CA3AF); // abu-abu
+        return const Color(0xFFEF4444); // merah
       case TicketStatus.read:
         return const Color(0xFF3B82F6); // biru
       case TicketStatus.inProgress:
@@ -90,7 +90,7 @@ extension TicketStatusExtension on TicketStatus {
       case TicketStatus.resolved:
         return const Color(0xFF10B981); // hijau
       case TicketStatus.rejected:
-        return const Color(0xFFEF4444); // merah
+        return const Color(0xFF9CA3AF); // abu-abu
     }
   }
 }
