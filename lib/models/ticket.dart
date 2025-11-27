@@ -17,10 +17,6 @@ class Ticket {
   final List<Document> documents;
   final Category? category;
 
-  // ❌ HAPUS field ini karena tidak ada di database
-  // final bool hasUpdates;
-  // final bool isRead;
-
   Ticket({
     required this.id,
     required this.userId,
@@ -152,19 +148,12 @@ class Ticket {
     );
   }
 
-  // ✅ GETTER untuk menentukan apakah ticket ada update
-  // Berdasarkan status dan resolution saja (tanpa field database)
   bool get hasUpdates {
     return status != TicketStatus.unread || 
            (resolution != null && resolution!.isNotEmpty);
   }
 
-  // ✅ GETTER untuk menentukan apakah ticket sudah dibaca
-  // Kita anggap ticket sudah "dibaca" jika status-nya unread (masih baru)
-  // Atau jika sudah ada interaksi (bisa disesuaikan logic-nya)
   bool get isRead {
-    // Logic sederhana: Ticket dianggap "belum dibaca" jika masih unread
-    // dan belum ada resolution
     return status != TicketStatus.unread || 
            (resolution != null && resolution!.isNotEmpty);
   }

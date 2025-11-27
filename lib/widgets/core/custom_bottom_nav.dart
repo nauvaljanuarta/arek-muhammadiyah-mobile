@@ -5,14 +5,14 @@ class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final VoidCallback onAddTicketPressed;
-  final int updatedCount; // ✅ Tambahkan parameter updatedCount
+  final int updatedCount; // Menerima jumlah update dari HomePage
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.onAddTicketPressed,
-    this.updatedCount = 0, // ✅ Default 0
+    this.updatedCount = 0,
   });
 
   @override
@@ -22,11 +22,13 @@ class CustomBottomNav extends StatelessWidget {
         color: AppTheme.surface,
         border: Border(
           top: BorderSide(
-            color: AppTheme.primaryLight.withValues(alpha: 0.2),
+            color: AppTheme.primaryLight.withOpacity(0.2), // Menggunakan withOpacity untuk kompatibilitas
+            width: 0.5,
           ),
         ),
       ),
       child: SafeArea(
+        top: false, // Biasanya bottom nav tidak butuh safe area atas
         child: SizedBox(
           height: 60,
           child: Row(
@@ -44,20 +46,21 @@ class CustomBottomNav extends StatelessWidget {
                 index: 1,
                 isActive: currentIndex == 1,
               ),
+              // Tombol Tambah Tengah
               CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: onAddTicketPressed,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       CupertinoIcons.plus_app_fill,
                       color: AppTheme.textSecondary,
-                      size: 24,
+                      size: 28, // Sedikit diperbesar agar menonjol
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      'Add Tickets',
+                    const Text(
+                      'Add Ticket',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 10,
@@ -73,8 +76,8 @@ class CustomBottomNav extends StatelessWidget {
                 label: 'Tickets',
                 index: 2,
                 isActive: currentIndex == 2,
-                showBadge: updatedCount > 0, // ✅ Tampilkan badge jika ada update
-                badgeCount: updatedCount, // ✅ Pass jumlah update
+                showBadge: updatedCount > 0, // Logika Badge
+                badgeCount: updatedCount,
               ),
               _buildNavItem(
                 icon: CupertinoIcons.person_fill,
@@ -102,29 +105,37 @@ class CustomBottomNav extends StatelessWidget {
       onPressed: () => onTap(index),
       child: Stack(
         alignment: Alignment.topRight,
+        clipBehavior: Clip.none, // Agar badge tidak terpotong
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isActive ? AppTheme.primaryDark : AppTheme.textSecondary,
-                size: 24,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 10,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
                   color: isActive ? AppTheme.primaryDark : AppTheme.textSecondary,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  size: 24,
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 10,
+                    color: isActive ? AppTheme.primaryDark : AppTheme.textSecondary,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
           ),
           if (showBadge && badgeCount > 0)
-            _buildBadge(badgeCount),
+            Positioned(
+              top: 0,
+              right: 8, // Sedikit digeser agar pas di ikon
+              child: _buildBadge(badgeCount),
+            ),
         ],
       ),
     );
@@ -132,24 +143,27 @@ class CustomBottomNav extends StatelessWidget {
 
   Widget _buildBadge(int count) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: CupertinoColors.systemRed,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.surface, width: 1.5), // Border putih agar kontras
       ),
       constraints: const BoxConstraints(
-        minWidth: 16,
-        minHeight: 16,
+        minWidth: 18,
+        minHeight: 18,
       ),
-      child: Text(
-        count > 9 ? '9+' : count.toString(),
-        style: const TextStyle(
-          color: CupertinoColors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Montserrat',
+      child: Center(
+        child: Text(
+          count > 9 ? '9+' : count.toString(),
+          style: const TextStyle(
+            color: CupertinoColors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Montserrat',
+          ),
+          textAlign: TextAlign.center,
         ),
-        textAlign: TextAlign.center,
       ),
     );
   }

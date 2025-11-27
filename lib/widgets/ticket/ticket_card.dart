@@ -24,29 +24,21 @@ class TicketCard extends StatelessWidget {
     return '${_formatDate(date)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  // Helper method untuk menentukan badge text berdasarkan status
-  String _getBadgeText() {
-    if (ticket.status == TicketStatus.inProgress) {
-      return 'DIPROSES';
-    } else if (ticket.status == TicketStatus.resolved) {
-      return 'SELESAI';
-    } else if (ticket.resolution != null && ticket.resolution!.isNotEmpty) {
-      return 'BALASAN';
-    }
-    return 'BARU';
-  }
-
-  // Helper method untuk menentukan badge color berdasarkan status
+  // Helper method untuk menentukan badge color agar sesuai konteks status
   Color _getBadgeColor() {
     switch (ticket.status) {
       case TicketStatus.inProgress:
         return CupertinoColors.systemOrange;
       case TicketStatus.resolved:
         return CupertinoColors.systemGreen;
+      case TicketStatus.rejected:
+        return CupertinoColors.systemGrey;
       default:
+        // Jika ada balasan tapi status masih unread/read
         if (ticket.resolution != null && ticket.resolution!.isNotEmpty) {
           return CupertinoColors.systemBlue;
         }
+        // Default untuk notifikasi baru
         return CupertinoColors.systemRed;
     }
   }
@@ -73,6 +65,7 @@ class TicketCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,14 +124,13 @@ class TicketCard extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  // Info Row: Tanggal dan Kategori
                   Row(
                     children: [
                       // Tanggal dibuat
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             CupertinoIcons.calendar,
                             size: 14,
                             color: AppTheme.textSecondary,
@@ -162,7 +154,7 @@ class TicketCard extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               CupertinoIcons.tag,
                               size: 14,
                               color: AppTheme.textSecondary,
@@ -182,7 +174,6 @@ class TicketCard extends StatelessWidget {
                     ],
                   ),
 
-                  // Info tambahan: Tanggal update terakhir dan resolved date
                   if (ticket.updatedAt != ticket.createdAt || ticket.resolvedAt != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -219,7 +210,6 @@ class TicketCard extends StatelessWidget {
                       ),
                     ),
 
-                  // Indicator untuk ticket yang memiliki resolution
                   if (ticket.resolution != null && ticket.resolution!.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: 8),
@@ -232,7 +222,7 @@ class TicketCard extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
@@ -240,7 +230,7 @@ class TicketCard extends StatelessWidget {
                             size: 12,
                             color: CupertinoColors.systemBlue,
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Text(
                             'Ada balasan admin',
                             style: TextStyle(
@@ -256,32 +246,27 @@ class TicketCard extends StatelessWidget {
                 ],
               ),
 
-              // ✅ Badge untuk ticket yang memiliki update
               if (showBadge)
                 Positioned(
-                  top: 0,
-                  right: 0,
+                  top: -4,
+                  right: -4,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    width: 14, // Ukuran dot badge
+                    height: 14,
                     decoration: BoxDecoration(
-                      color: _getBadgeColor(),
-                      borderRadius: BorderRadius.circular(12),
+                      color: _getBadgeColor(), // Warna sesuai status
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2, // Border putih agar kontras dengan card
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacity(0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
                       ],
-                    ),
-                    child: Text(
-                      _getBadgeText(),
-                      style: const TextStyle(
-                        color: CupertinoColors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Montserrat',
-                      ),
                     ),
                   ),
                 ),

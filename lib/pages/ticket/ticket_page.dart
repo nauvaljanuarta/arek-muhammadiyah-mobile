@@ -18,35 +18,36 @@ class TicketPage extends StatefulWidget {
 
 class _TicketPageState extends State<TicketPage> {
   List<ticket_model.Ticket> userTickets = [];
-  Set<int> readTickets = {};
+  
+  // Menggunakan Map untuk menyimpan kapan terakhir user membaca setiap tiket
+  Map<String, DateTime> readTimestamps = {}; 
+  
   bool isLoading = true;
   String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadUserTickets();
-    _loadReadTickets();
+    _loadData();
   }
 
-  Future<void> _loadReadTickets() async {
-    final readIds = await TicketReadService.getReadTicketIds();
-    setState(() {
-      readTickets = readIds.toSet();
-    });
-  }
-
-  Future<void> _loadUserTickets() async {
+  // Load Tiket + Load Status Baca secara bersamaan
+  Future<void> _loadData() async {
     try {
       setState(() {
         isLoading = true;
         errorMessage = null;
       });
 
+      // Fetch Data Tiket
       final tickets = await TicketService.getUserTickets();
+      
+      // Fetch Status Baca Lokal
+      final timestamps = await TicketReadService.getAllReadTimestamps();
 
       setState(() {
         userTickets = tickets;
+        readTimestamps = timestamps;
         isLoading = false;
       });
     } catch (e) {
@@ -58,21 +59,23 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   Future<void> _refreshTickets() async {
-    await _loadUserTickets();
-    await _loadReadTickets();
-    
+    await _loadData();
     widget.onTicketOpened?.call();
   }
 
   void _onTicketTap(ticket_model.Ticket ticket) async {
-    await TicketReadService.markTicketAsRead(ticket.id);
+    // 1. Simpan waktu sekarang sebagai waktu baca
+    await TicketReadService.markTicketAsRead(ticket.id.toString());
     
+    // 2. Update state lokal segera agar badge hilang tanpa refresh API
     setState(() {
-      readTickets.add(ticket.id);
+      readTimestamps[ticket.id.toString()] = DateTime.now();
     });
 
+    // 3. Callback untuk update badge di Home Page
     widget.onTicketOpened?.call();
 
+    // 4. Buka Detail
     final result = await Navigator.push(
       context,
       CupertinoPageRoute(
@@ -80,13 +83,23 @@ class _TicketPageState extends State<TicketPage> {
       ),
     );
 
+    // 5. Jika kembali, refresh untuk memastikan sinkronisasi
     if (result != null) {
       _refreshTickets();
     }
   }
 
+  // Logika Menentukan Badge di UI
   bool _shouldShowBadge(ticket_model.Ticket ticket) {
-    return ticket.hasUpdates && !readTickets.contains(ticket.id);
+    // Ambil waktu terakhir baca dari Map
+    final lastRead = readTimestamps[ticket.id.toString()];
+
+    // Jika belum pernah dibaca -> Tampilkan Badge
+    if (lastRead == null) return true;
+
+    // Jika waktu update tiket LEBIH BARU dari waktu baca -> Tampilkan Badge
+    // (tambah buffer 1 detik untuk toleransi)
+    return ticket.updatedAt.isAfter(lastRead.add(const Duration(seconds: 1)));
   }
 
   @override
@@ -235,10 +248,13 @@ class _TicketPageState extends State<TicketPage> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final ticket = userTickets[index];
+                      // Panggil logika pengecekan badge yang baru
+                      final showBadge = _shouldShowBadge(ticket);
+                      
                       return TicketCard(
                         ticket: ticket,
                         onTap: () => _onTicketTap(ticket),
-                        showBadge: _shouldShowBadge(ticket),
+                        showBadge: showBadge,
                       );
                     },
                     childCount: userTickets.length,

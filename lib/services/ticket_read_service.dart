@@ -1,55 +1,51 @@
-// services/ticket_read_service.dart
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/ticket.dart';
 
 class TicketReadService {
-  static const String _readTicketsKey = 'read_tickets';
-  static const String _lastUpdateKey = 'last_ticket_update';
+  // Prefix untuk key di SharedPreferences agar tidak bentrok
+  static const String _prefixKey = 'ticket_last_read_';
 
-  static Future<void> markTicketAsRead(int ticketId) async {
+  /// Menandai tiket sudah dibaca saat ini
+  static Future<void> markTicketAsRead(String ticketId) async {
     final prefs = await SharedPreferences.getInstance();
-    final readTickets = prefs.getStringList(_readTicketsKey) ?? [];
-    
-    if (!readTickets.contains(ticketId.toString())) {
-      readTickets.add(ticketId.toString());
-      await prefs.setStringList(_readTicketsKey, readTickets);
-      print('✅ Ticket $ticketId marked as read');
+    // Simpan waktu sekarang sebagai waktu terakhir baca
+    await prefs.setString('$_prefixKey$ticketId', DateTime.now().toIso8601String());
+  }
+
+  /// Cek apakah tiket memiliki update baru yang belum dibaca
+  /// Logika: Badge muncul jika (Ticket UpdatedAt > Local Last Read Time)
+  static Future<bool> isTicketUnread(Ticket ticket) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastReadString = prefs.getString('$_prefixKey${ticket.id}');
+
+    // Jika belum pernah dibaca sama sekali, anggap unread (return true)
+    if (lastReadString == null) {
+      return true;
     }
+
+    final lastReadTime = DateTime.parse(lastReadString);
+    
+    // Pastikan updatedAt tidak null, jika null pakai createdAt
+    final ticketUpdateTime = ticket.updatedAt;
+
+    // Badge muncul jika waktu update tiket SETELAH waktu terakhir baca
+    // Tambahkan buffer 1-2 detik untuk toleransi perbedaan waktu server/lokal
+    return ticketUpdateTime.isAfter(lastReadTime.add(const Duration(seconds: 2)));
   }
 
-  static Future<void> markTicketAsUnreadForNewUpdates(int ticketId) async {
+  /// Helper untuk mengambil semua status baca sekaligus (untuk performa list)
+  static Future<Map<String, DateTime>> getAllReadTimestamps() async {
     final prefs = await SharedPreferences.getInstance();
-    final readTickets = prefs.getStringList(_readTicketsKey) ?? [];
+    final keys = prefs.getKeys().where((k) => k.startsWith(_prefixKey));
     
-    if (readTickets.contains(ticketId.toString())) {
-      readTickets.remove(ticketId.toString());
-      await prefs.setStringList(_readTicketsKey, readTickets);
-      print('🔄 Ticket $ticketId marked as UNREAD (new updates)');
+    Map<String, DateTime> timestamps = {};
+    for (var key in keys) {
+      final ticketId = key.replaceAll(_prefixKey, '');
+      final timeString = prefs.getString(key);
+      if (timeString != null) {
+        timestamps[ticketId] = DateTime.parse(timeString);
+      }
     }
-  }
-
-  static Future<bool> isTicketRead(int ticketId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final readTickets = prefs.getStringList(_readTicketsKey) ?? [];
-    return readTickets.contains(ticketId.toString());
-  }
-
-  static Future<List<int>> getReadTicketIds() async {
-    final prefs = await SharedPreferences.getInstance();
-    final readTickets = prefs.getStringList(_readTicketsKey) ?? [];
-    return readTickets.map((id) => int.tryParse(id) ?? 0).toList();
-  }
-
-  static Future<void> saveLastUpdateTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastUpdateKey, DateTime.now().toIso8601String());
-  }
-
-  static Future<bool> hasNewUpdatesSinceLastRead() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastUpdate = prefs.getString(_lastUpdateKey);
-    if (lastUpdate == null) return true;
-    
-    final lastUpdateTime = DateTime.parse(lastUpdate);
-    return DateTime.now().difference(lastUpdateTime).inMinutes > 5; 
+    return timestamps;
   }
 }
