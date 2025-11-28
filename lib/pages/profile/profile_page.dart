@@ -76,7 +76,6 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: AppTheme.background,
       child: CustomScrollView(
         slivers: [
-          // Cupertino Sliver Navigation Bar
           CupertinoSliverNavigationBar(
             largeTitle: const Text(
               'Profile',

@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart'; // Perlu untuk Colors, ScaffoldMessenger, dll jika dipakai
 import '../../config/theme/theme.dart';
 import '../home/home_page.dart';
-import '/services/user_service.dart';
+import '../../services/user_service.dart';
+// Import halaman tujuan logic
+import 'complete_profile_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -34,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
         if (_currentPage < _carouselImages.length - 1) {
           _currentPage++;
         } else {
-          _currentPage = 0; 
+          _currentPage = 0;
         }
         _pageController.animateToPage(
           _currentPage,
@@ -45,30 +49,63 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-    Future<void> _login() async {
+  Future<void> _login() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showError('Please fill in all fields');
+      _showError('Mohon isi semua kolom');
       return;
     }
 
     setState(() => _loading = true);
 
     try {
+      // 1. Lakukan Login
       final success = await UserService.login(
         telp: _usernameController.text,
         password: _passwordController.text,
       );
 
       if (success) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(builder: (_) => const HomePage()),
-        );
+        if (!mounted) return;
+
+        // 2. Cek Status Akun (Lengkap/Belum, Ganti Password/Tidak)
+        final status = UserService.checkAuthStatus();
+
+        switch (status) {
+          case AuthStatus.authenticated:
+            // Profil Aman -> Masuk Home
+            Navigator.pushReplacement(
+              context,
+              CupertinoPageRoute(builder: (_) => const HomePage()),
+            );
+            break;
+
+          case AuthStatus.profileIncomplete:
+            // Profil Belum Lengkap (User HP) -> Paksa lengkapi data
+            Navigator.pushReplacement(
+              context,
+              CupertinoPageRoute(builder: (_) => const CompleteProfilePage()),
+            );
+            _showDialogInfo('Mohon lengkapi data diri Anda terlebih dahulu.');
+            break;
+
+          case AuthStatus.passwordChangeRequired:
+            // Password Ganti (User Admin) -> Logic ini sementara
+            // Jika page ganti password belum ada, tampilkan info saja atau redirect ke page ganti pass
+            _showError('Anda wajib mengganti password default (Fitur segera hadir).');
+            // Navigator.pushReplacement(context, CupertinoPageRoute(builder: (_) => const ChangePasswordPage()));
+            break;
+
+          case AuthStatus.unauthenticated:
+            _showError('Sesi tidak valid, silakan login ulang.');
+            break;
+        }
       }
     } catch (e) {
-      _showError(e.toString());
+      _showError(e.toString().replaceAll('Exception: ', ''));
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -76,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
     showCupertinoDialog(
       context: context,
       builder: (_) => CupertinoAlertDialog(
-        title: const Text('Error'),
+        title: const Text('Gagal Masuk'),
         content: Text(message),
         actions: [
           CupertinoDialogAction(
@@ -88,15 +125,22 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _showDialogInfo(String message) {
+    // Helper untuk info non-error (seperti redirect profil)
+    // Sebaiknya menggunakan SnackBar tapi di CupertinoPageScaffold agak tricky,
+    // jadi pakai dialog sebentar atau biarkan user melihat judul halaman berikutnya.
+    // Di sini kita skip UI blocking agar user langsung masuk halaman tujuan.
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return CupertinoPageScaffold(
       backgroundColor: AppTheme.background,
       child: Stack(
         children: [
-          // Carousel
+          // Carousel Background
           SizedBox(
             height: screenHeight,
             child: PageView.builder(
@@ -110,12 +154,12 @@ class _LoginPageState extends State<LoginPage> {
                   _carouselImages[index],
                   fit: BoxFit.cover,
                   width: MediaQuery.of(context).size.width,
-                  height: screenHeight * 0.25,
+                  height: screenHeight * 0.35, // Sedikit lebih tinggi agar estetik
                 );
               },
             ),
           ),
-          // Page indicator
+          // Page indicator overlay
           Positioned(
             top: 60,
             left: 0,
@@ -138,11 +182,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // Login Form
+          
+          // Login Form Container
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: screenHeight * 0.75,
+              height: screenHeight * 0.70, // Proporsi area putih
               decoration: BoxDecoration(
                 color: AppTheme.background,
                 borderRadius: const BorderRadius.only(
@@ -159,30 +204,34 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: SafeArea(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                   child: Column(
                     children: [
                       Container(
                         width: 40,
+                        height: 4,
                         decoration: BoxDecoration(
                           color: AppTheme.textSecondary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
+                      
+                      // Logo & Title
                       SizedBox(
-                        width: 200,
-                        height: 200,
+                        width: 120,
+                        height: 120,
                         child: Image.asset(
                           'assets/images/muhammadiyahlogo.png',
                           fit: BoxFit.contain,
                         ),
                       ),
+                      const SizedBox(height: 16),
                       const Text(
                         'Welcome Back',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
-                          fontSize: 28,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textPrimary,
                         ),
@@ -192,15 +241,18 @@ class _LoginPageState extends State<LoginPage> {
                         'Masuk ke akun Anda',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
-                          fontSize: 16,
+                          fontSize: 14,
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      
+                      const SizedBox(height: 32),
+
+                      // Input Fields
                       CupertinoTextField(
                         controller: _usernameController,
                         placeholder: 'No. Telp',
-                        keyboardType: TextInputType.text,
+                        keyboardType: TextInputType.phone,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppTheme.surface,
@@ -208,6 +260,10 @@ class _LoginPageState extends State<LoginPage> {
                           border: Border.all(
                             color: AppTheme.textSecondary.withOpacity(0.1),
                           ),
+                        ),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 16),
+                          child: Icon(CupertinoIcons.phone, color: AppTheme.textSecondary, size: 20),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -223,8 +279,15 @@ class _LoginPageState extends State<LoginPage> {
                             color: AppTheme.textSecondary.withOpacity(0.1),
                           ),
                         ),
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 16),
+                          child: Icon(CupertinoIcons.lock, color: AppTheme.textSecondary, size: 20),
+                        ),
                       ),
+                      
                       const SizedBox(height: 24),
+                      
+                      // Button Login
                       SizedBox(
                         width: double.infinity,
                         height: 54,
@@ -233,9 +296,9 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(12),
                           onPressed: _loading ? null : _login,
                           child: _loading
-                              ? const CupertinoActivityIndicator()
+                              ? const CupertinoActivityIndicator(color: Colors.white)
                               : const Text(
-                                  'Login',
+                                  'Masuk',
                                   style: TextStyle(
                                     fontFamily: 'Montserrat',
                                     fontSize: 16,
@@ -245,9 +308,13 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                         ),
                       ),
+                      
                       const SizedBox(height: 16),
+                      
+                      // Lupa Password
                       CupertinoButton(
                         onPressed: () {},
+                        padding: EdgeInsets.zero,
                         child: Text(
                           'Lupa Password?',
                           style: TextStyle(
@@ -257,6 +324,41 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
+
+                      const SizedBox(height: 24),
+
+                      // Register Link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Belum punya akun? ',
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 14,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                CupertinoPageRoute(builder: (context) => const RegisterPage()),
+                              );
+                            },
+                            child: Text(
+                              'Daftar',
+                              style: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),

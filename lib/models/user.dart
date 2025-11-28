@@ -1,5 +1,26 @@
-import 'role.dart';
-import 'enums.dart';
+import 'enums.dart'; // Pastikan file enums.dart ada di folder models
+
+class Role {
+  final int id;
+  final String name;
+  final String description;
+
+  Role({required this.id, required this.name, required this.description});
+
+  factory Role.fromJson(Map<String, dynamic> json) {
+    return Role(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'description': description,
+      };
+}
 
 class User {
   final int id;
@@ -13,8 +34,8 @@ class User {
   final String? nik;
   final String? address;
   final bool isMobile;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt; // Bisa null saat register baru
+  final DateTime? updatedAt; // Bisa null saat register baru
 
   final Role? role;
   final String? villageName;
@@ -22,6 +43,9 @@ class User {
   final String? districtName;
   final String? cityId;
   final String? cityName;
+  
+  // Private field untuk data dari DB
+  final bool _mustChangePassword;
 
   User({
     required this.id,
@@ -35,39 +59,46 @@ class User {
     this.nik,
     this.address,
     this.isMobile = false,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
     this.role,
     this.villageName,
     this.districtId,
     this.districtName,
     this.cityId,
     this.cityName,
-  });
+    bool mustChangePassword = false,
+  }) : _mustChangePassword = mustChangePassword;
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
-        id: json['id'],
-        name: json['name'],
-        birthDate: json['birth_date'] != null
-            ? DateTime.parse(json['birth_date'])
-            : null,
-        telp: json['telp'],
-        gender: genderFromString(json['gender']),
-        job: json['job'],
-        roleId: json['role_id'],
-        villageId: json['village_id'],
-        nik: json['nik'],
-        address: json['address'],
-        isMobile: json['is_mobile'] ?? false,
-        createdAt: DateTime.parse(json['created_at']),
-        updatedAt: DateTime.parse(json['updated_at']),
-        role: json['role'] != null ? Role.fromJson(json['role']) : null,
-        villageName: json['village_name'],
-        districtId: json['district_id'],
-        districtName: json['district_name'],
-        cityId: json['city_id'],
-        cityName: json['city_name'],
-      );
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name'] ?? '',
+      birthDate: json['birth_date'] != null
+          ? DateTime.tryParse(json['birth_date'].toString())
+          : null,
+      telp: json['telp']?.toString(),
+      gender: genderFromString(json['gender']?.toString()),
+      job: json['job']?.toString(),
+      roleId: json['role_id'] is int ? json['role_id'] : int.tryParse(json['role_id']?.toString() ?? ''),
+      villageId: json['village_id']?.toString(),
+      nik: json['nik']?.toString(),
+      address: json['address']?.toString(),
+      isMobile: json['is_mobile'] == true || json['is_mobile'] == 1,
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
+      role: json['role'] != null ? Role.fromJson(json['role']) : null,
+      villageName: json['village_name']?.toString(),
+      districtId: json['district_id']?.toString(),
+      districtName: json['district_name']?.toString(),
+      cityId: json['city_id']?.toString(),
+      cityName: json['city_name']?.toString(),
+      // Handle berbagai format boolean dari backend (1/0/"1"/"true"/true)
+      mustChangePassword: json['must_change_password'] == true || 
+                          json['must_change_password'] == 1 || 
+                          json['must_change_password'] == "1",
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -81,31 +112,22 @@ class User {
         'nik': nik,
         'address': address,
         'is_mobile': isMobile,
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
+        'created_at': createdAt?.toIso8601String(),
+        'updated_at': updatedAt?.toIso8601String(),
         'role': role?.toJson(),
-        'village_name': villageName,
-        'district_id': districtId,
-        'district_name': districtName,
-        'city_id': cityId,
-        'city_name': cityName,
       };
 
-    String get locationInfo {
+  String get locationInfo {
     final parts = <String>[];
     if (villageName != null && villageName!.isNotEmpty) parts.add(villageName!);
     if (districtName != null && districtName!.isNotEmpty) parts.add('Kec. $districtName');
     if (cityName != null && cityName!.isNotEmpty) parts.add(cityName!);
     return parts.isNotEmpty ? parts.join(', ') : '-';
-
   }
 
-  // Format NIK dengan pemisah
   String get formattedNik {
     if (nik == null || nik!.isEmpty) return '-';
     if (nik!.length <= 4) return nik!;
-    
-    // Format: XXXXX-XXXX-XXXX-XXXX
     final chunks = <String>[];
     for (int i = 0; i < nik!.length; i += 4) {
       final end = i + 4 > nik!.length ? nik!.length : i + 4;
@@ -114,4 +136,10 @@ class User {
     return chunks.join('-');
   }
 
+  bool get isProfileComplete {
+    return (nik != null && nik!.isNotEmpty) &&
+           (address != null && address!.isNotEmpty);
+  }
+
+  bool get mustChangePassword => _mustChangePassword;
 }

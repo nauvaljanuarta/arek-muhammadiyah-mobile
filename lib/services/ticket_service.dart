@@ -7,7 +7,6 @@ import '../services/user_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
-import '../models/enums.dart';
 import 'ticket_read_service.dart';
 
 class TicketService {

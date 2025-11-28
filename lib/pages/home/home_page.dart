@@ -54,7 +54,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _startWhatsAppAutoRefresh() {
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      print('🔄 WhatsApp-style auto refresh checking for new updates...');
       _loadUpdatedCount();
     });
   }

@@ -5,28 +5,28 @@ import 'pages/splash/splash_page.dart';
 import 'services/user_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  final prefs = await SharedPreferences.getInstance();
-  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
+  await dotenv.load(fileName: ".env"); 
+  
   await UserService.loadUserFromStorage();
 
-  runApp(MuhammadiyahApp(isLoggedIn: isLoggedIn));
+  runApp(const MuhammadiyahApp());
 }
 
 class MuhammadiyahApp extends StatelessWidget {
-  final bool isLoggedIn;
-  const MuhammadiyahApp({super.key, required this.isLoggedIn});
+  const MuhammadiyahApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Muhammadiyah App',
       theme: AppTheme.cupertinoTheme,
-      home:  const SplashPage(),
+      home: const SplashPage(),
     );
   }
 }

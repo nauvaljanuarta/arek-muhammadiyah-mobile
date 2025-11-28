@@ -1,7 +1,15 @@
 import 'dart:convert';
 import '../models/user.dart';
+import '../models/region.dart';
 import 'api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+enum AuthStatus {
+  authenticated,
+  unauthenticated,
+  profileIncomplete,
+  passwordChangeRequired,
+}
 
 class UserService {
   static final ApiClient _client = ApiClient();
@@ -10,10 +18,19 @@ class UserService {
 
   static String? get token => _token;
 
-  static Future<bool> login({
-    required String telp,
-    required String password,
-  }) async {
+  static AuthStatus checkAuthStatus() {
+    if (currentUser == null) return AuthStatus.unauthenticated;
+    if (currentUser!.mustChangePassword) {
+      return AuthStatus.passwordChangeRequired;
+    }
+    if (!currentUser!.isProfileComplete) {
+      return AuthStatus.profileIncomplete;
+    }
+    return AuthStatus.authenticated;
+  }
+
+
+  static Future<bool> login({required String telp, required String password}) async {
     final response = await _client.post(
       '/auth/login',
       body: {'telp': telp, 'password': password},
@@ -29,16 +46,36 @@ class UserService {
       if (token != null && userData != null) {
         _token = token;
         currentUser = User.fromJson(userData);
-
         await prefs.setString('token', token);
         await prefs.setString('user', jsonEncode(userData));
         await prefs.setBool('isLoggedIn', true);
       }
-
       return true;
     } else {
       throw Exception(data['message'] ?? 'Login gagal');
     }
+  }
+
+  static Future<User> register(Map<String, dynamic> body) async {
+    final response = await _client.post('/auth/register', body: {
+      ...body,
+      'is_mobile': true, 
+      'role_id': 3,      
+    }, withAuth: false);
+
+    final data = jsonDecode(response.body);
+    if ((response.statusCode == 201 || response.statusCode == 200) && data['success'] == true) {
+      return User.fromJson(data['data']);
+    } else {
+      throw Exception(data['message'] ?? 'Gagal mendaftar');
+    }
+  }
+
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    _token = null;
+    currentUser = null;
   }
 
   static Future<void> loadUserFromStorage() async {
@@ -48,7 +85,11 @@ class UserService {
 
     if (userJson != null && savedToken != null) {
       _token = savedToken;
-      currentUser = User.fromJson(jsonDecode(userJson));
+      try {
+        currentUser = User.fromJson(jsonDecode(userJson));
+      } catch (e) {
+        await logout();
+      }
     }
   }
 
@@ -59,28 +100,42 @@ class UserService {
     return isLoggedIn && token != null && token.isNotEmpty;
   }
 
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('user');
-    await prefs.remove('isLoggedIn');
-    _token = null;
-    currentUser = null;
-  }
+  // --- WILAYAH FETCHING (CASCADING) ---
 
-  static Future<User> register(Map<String, dynamic> body) async {
-    final response = await _client.post('/users', body: {
-      ...body,
-      'is_mobile': true,
-    }, withAuth: false);
-
+  static Future<List<Regency>> getCities() async {
+    final response = await _client.get('/wilayah/cities');
     final data = jsonDecode(response.body);
-    if (response.statusCode == 201 && data['success'] == true) {
-      return User.fromJson(data['data']);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return (data['data'] as List).map((e) => Regency.fromJson(e)).toList();
     } else {
-      throw Exception(data['message'] ?? 'Failed to register');
+      throw Exception('Gagal memuat kota');
     }
   }
+
+  static Future<List<District>> getDistricts(String cityId) async {
+    final response = await _client.get('/wilayah/cities/$cityId/districts');
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return (data['data'] as List).map((e) => District.fromJson(e)).toList();
+    } else {
+      throw Exception('Gagal memuat kecamatan');
+    }
+  }
+
+  static Future<List<Village>> getVillages(String cityId, String districtId) async {
+    final response = await _client.get('/wilayah/cities/$cityId/districts/$districtId/villages');
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return (data['data'] as List).map((e) => Village.fromJson(e)).toList();
+    } else {
+      throw Exception('Gagal memuat kelurahan');
+    }
+  }
+
+  // --- USER DATA MANAGEMENT ---
 
   static Future<List<User>> getUsers({int page = 1, int limit = 10}) async {
     final response = await _client.get('/users?page=$page&limit=$limit');
@@ -93,6 +148,7 @@ class UserService {
     }
   }
 
+  // ✅ INI METHOD YANG HILANG
   static Future<User> getUserById(String id) async {
     final response = await _client.get('/users/$id');
     final data = jsonDecode(response.body);
@@ -109,6 +165,12 @@ class UserService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 && data['success'] == true) {
+      // Jika update diri sendiri, perbarui data lokal juga
+      if (currentUser != null && currentUser!.id.toString() == id) {
+        currentUser = User.fromJson(data['data']);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user', jsonEncode(data['data']));
+      }
       return User.fromJson(data['data']);
     } else {
       throw Exception(data['message'] ?? 'Failed to update user');
