@@ -51,15 +51,15 @@ TicketStatus ticketStatusFromString(String status) {
 String ticketStatusToString(TicketStatus status) {
   switch (status) {
     case TicketStatus.read:
-      return 'read';
+      return 'Dibaca';
     case TicketStatus.inProgress:
-      return 'in_progress';
+      return 'Proses';
     case TicketStatus.resolved:
-      return 'resolved';
+      return 'Diterima';
     case TicketStatus.rejected:
-      return 'rejected';
+      return 'Ditolak';
     case TicketStatus.unread:
-    return 'unread';
+    return 'Belum Dibaca';
   }
 }
 
@@ -67,15 +67,15 @@ extension TicketStatusExtension on TicketStatus {
   String get label {
     switch (this) {
       case TicketStatus.unread:
-        return 'Unread';
+        return 'Belum Dibaca';
       case TicketStatus.read:
-        return 'Read';
+        return 'Dibaca';
       case TicketStatus.inProgress:
-        return 'Process';
+        return 'Proses';
       case TicketStatus.resolved:
-        return 'Resolved';
+        return 'Diterima';
       case TicketStatus.rejected:
-        return 'Rejected';
+        return 'Ditolak';
     }
   }
 
