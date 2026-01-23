@@ -32,7 +32,6 @@ class _LoginPageState extends State<LoginPage> {
     'assets/images/carrousel3.jpg',
   ];
 
-  // --- LIFECYCLE ---
   @override
   void initState() {
     super.initState();
@@ -76,27 +75,19 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _loading = true);
 
     try {
-      final success = await UserService.login(
+      await UserService.login(
         telp: _usernameController.text,
         password: _passwordController.text,
       );
 
-      if (success) {
-        if (UserService.currentUser == null) {
-          await UserService.loadUserFromStorage();
-        }
+      if (!mounted) return;
 
-        if (UserService.currentUser == null) {
-          throw Exception('Failed to load user profile. Please try again.');
-        }
-        if (!mounted) return;
-        
-        final status = await UserService.checkAuthStatus();
-        _handleNavigation(status);
-      }
+      final status = await UserService.checkAuthStatus();
+      _handleNavigation(status);
+
     } catch (e) {
-      String errorMsg = e.toString().replaceAll('Exception: ', '');
-      _showError(errorMsg);
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showError(msg);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
