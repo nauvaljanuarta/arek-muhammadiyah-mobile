@@ -34,11 +34,9 @@ class TicketCard extends StatelessWidget {
       case TicketStatus.rejected:
         return CupertinoColors.systemGrey;
       default:
-        // Jika ada balasan tapi status masih unread/read
         if (ticket.resolution != null && ticket.resolution!.isNotEmpty) {
           return CupertinoColors.systemBlue;
         }
-        // Default untuk notifikasi baru
         return CupertinoColors.systemRed;
     }
   }
