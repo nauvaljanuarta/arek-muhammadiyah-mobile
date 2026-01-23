@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart'; // Butuh untuk Colors
+import 'package:flutter/material.dart'; 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 import '../auth/login_page.dart';
 import '../home/home_page.dart';
 import '../../services/user_service.dart';
-import '../auth/complete_profile_page.dart'; // Import halaman ini
-import '../auth/change_password_page.dart';   // Import halaman ini
+import '../auth/complete_profile_page.dart'; 
+import '../auth/change_password_page.dart';  
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -48,20 +48,19 @@ class _SplashPageState extends State<SplashPage> {
     }
   }
 
-  Future<void> _navigateNext() async {
-    if (!mounted) return;
+Future<void> _navigateNext() async {
+  if (!mounted) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-    final currentUser = UserService.currentUser;
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
 
-    // Default tujuan: Login Page
-    Widget nextPage = const LoginPage();
+  Widget nextPage = const LoginPage();
 
-    if (isLoggedIn && currentUser != null) {
+  if (token != null && token.isNotEmpty) {
+    await UserService.loadUserFromStorage();
+
+    if (UserService.currentUser != null) {
       try {
-        await UserService.getUserById(currentUser.id.toString());
-        
         final status = await UserService.checkAuthStatus();
 
         switch (status) {
@@ -82,21 +81,20 @@ class _SplashPageState extends State<SplashPage> {
             nextPage = const LoginPage();
             break;
         }
-
       } catch (e) {
-        // Jika error koneksi atau 401, logout dan kembali ke login
         debugPrint("Splash Error: $e");
         await UserService.logout();
         nextPage = const LoginPage();
       }
     }
-
-    if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
-      CupertinoPageRoute(builder: (_) => nextPage),
-    );
   }
+
+  if (!mounted) return;
+
+  Navigator.of(context).pushReplacement(
+    CupertinoPageRoute(builder: (_) => nextPage),
+  );
+}
 
   @override
   void dispose() {
