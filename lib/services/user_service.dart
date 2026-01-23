@@ -21,22 +21,21 @@ class UserService {
   static String? get token => _token;
 
   static Future<AuthStatus> checkAuthStatus() async {
-    if (currentUser == null) return AuthStatus.unauthenticated;
-    
-    final prefs = await SharedPreferences.getInstance();
-    
-    bool isDefaultPass = prefs.getBool('is_using_default_pass') ?? false;
-    
-    if (isDefaultPass) {
-      return AuthStatus.passwordChangeRequired;
+    if (currentUser == null) {
+      await loadUserFromStorage();
     }
 
-    if (!currentUser!.isProfileComplete) {
-      return AuthStatus.profileIncomplete;
-    }
+    if (currentUser == null) return AuthStatus.unauthenticated;
+
+    final prefs = await SharedPreferences.getInstance();
+    final isDefaultPass = prefs.getBool('is_using_default_pass') ?? false;
+
+    if (isDefaultPass) return AuthStatus.passwordChangeRequired;
+    if (!currentUser!.isProfileComplete) return AuthStatus.profileIncomplete;
 
     return AuthStatus.authenticated;
-  }
+}
+
 
   static Future<bool> login({required String telp, required String password}) async {
     final response = await _client.post(
@@ -56,7 +55,6 @@ class UserService {
         currentUser = User.fromJson(userData);
         await prefs.setString('token', token);
         await prefs.setString('user', jsonEncode(userData));
-        await prefs.setBool('isLoggedIn', true);
 
         if (password == _adminDefaultPassword) {
           await prefs.setBool('is_using_default_pass', true);
@@ -107,10 +105,8 @@ class UserService {
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    // Hapus semua data sesi, termasuk flag password default
     await prefs.remove('token');
     await prefs.remove('user');
-    await prefs.remove('isLoggedIn');
     await prefs.remove('is_using_default_pass'); // Bersihkan flag
     
     _token = null;
@@ -170,7 +166,6 @@ class UserService {
     }
   }
 
-  // --- USER DATA MANAGEMENT ---
   static Future<List<User>> getUsers({int page = 1, int limit = 10}) async {
     final response = await _client.get('/users?page=$page&limit=$limit');
     final data = jsonDecode(response.body);
