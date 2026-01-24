@@ -6,7 +6,6 @@ import '../../config/theme/theme.dart';
 import '../../services/article_service.dart';
 import '../../models/article.dart';
 import '../../pages/article/detail_article_page.dart';
-import 'dart:ui';
 
 class StackedFeaturedArticles extends StatefulWidget {
   const StackedFeaturedArticles({super.key});
