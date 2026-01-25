@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
     FocusScope.of(context).unfocus();
 
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showError('Please fill in all fields');
+      _showError('Silakan isi semua kolom');
       return;
     }
 
@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         break;
       case AuthStatus.unauthenticated:
-        _showError('Session times up, please login again.');
+        _showError('Sesi berakhir, silakan login kembali.');
         break;
     }
   }
@@ -123,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
     showCupertinoDialog(
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('Login Failed'),
+        title: const Text('Login Gagal'),
         content: Text(message),
         actions: [
           CupertinoDialogAction(
@@ -238,7 +238,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Welcome Back',
+                        'Selamat Datang Kembali',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 24,
@@ -248,7 +248,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Login to your account',
+                        'Login ke akun Anda',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 14,
@@ -258,7 +258,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 32),
                       _buildTextField(
                         controller: _usernameController,
-                        placeholder: 'Phone Number',
+                        placeholder: 'Nomor Telepon',
                         icon: CupertinoIcons.phone,
                         keyboardType: TextInputType.phone,
                       ),
@@ -295,7 +295,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () {},
                         padding: EdgeInsets.zero,
                         child: const Text(
-                          'Forgot Password?',
+                          'Lupa Password?',
                           style: TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 14,
@@ -308,7 +308,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            'Don\'t have an account? ',
+                            'Belum punya akun?',
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 14,
@@ -323,7 +323,7 @@ class _LoginPageState extends State<LoginPage> {
                               );
                             },
                             child: const Text(
-                              'Register',
+                              'Daftar',
                               style: TextStyle(
                                 fontFamily: 'Montserrat',
                                 fontSize: 14,
