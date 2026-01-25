@@ -308,7 +308,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            'Belum punya akun?',
+                            'Belum punya akun? ',
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 14,

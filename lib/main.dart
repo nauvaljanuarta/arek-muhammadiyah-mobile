@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'config/theme/theme.dart';
 import 'pages/splash/splash_page.dart';
 import 'services/user_service.dart';
@@ -21,8 +22,12 @@ class MuhammadiyahApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
-      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        DefaultMaterialLocalizations.delegate,
+        DefaultWidgetsLocalizations.delegate,
+        DefaultCupertinoLocalizations.delegate,
+      ],
       title: 'Muhammadiyah App',
       theme: AppTheme.cupertinoTheme.copyWith(
         brightness: Brightness.light, 

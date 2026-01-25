@@ -134,7 +134,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
                   CupertinoButton(
                     padding: EdgeInsets.zero,
-                    child: const Text('Done'),
+                    child: const Text('Selesai'),
                     onPressed: () => Navigator.pop(context),
                   )
                 ],
@@ -162,61 +162,36 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   }
 
   // Date Picker Helper
-  void _showDatePicker() {
-    FocusScope.of(context).unfocus();
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => Container(
-        height: 250,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: CupertinoColors.separator, width: 0.0)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Date of Birth", style: TextStyle(fontWeight: FontWeight.bold)),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Text('Done'),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                ],
-              ),
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.date,
-                initialDateTime: _selectedDate ?? DateTime(1990, 1, 1),
-                maximumDate: DateTime.now(),
-                minimumDate: DateTime(1900),
-                onDateTimeChanged: (val) {
-                  setState(() => _selectedDate = val);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _showDatePicker() async {
+  FocusScope.of(context).unfocus();
+
+  final pickedDate = await showDatePicker(
+    context: context,
+    initialDate: _selectedDate ?? DateTime(1990, 1, 1),
+    firstDate: DateTime(1900),
+    lastDate: DateTime.now(),
+    helpText: 'Pilih Tanggal Lahir',
+    cancelText: 'Batal',
+    confirmText: 'Pilih',
+  );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
   }
 
-  // --- HANDLERS ---
 
   void _onGenderTap() {
     _showPicker<Map<String, String>>(
-      title: "Select Gender",
+      title: "Pilih Jenis Kelamin",
       items: _genderOptions,
       itemLabelBuilder: (item) => item['label']!,
       onSelectedItemChanged: (val) {
         setState(() => _selectedGender = val['value']);
       },
     );
-    // Set default if not selected when picker opens
     if (_selectedGender == null) {
       setState(() => _selectedGender = _genderOptions[0]['value']);
     }
@@ -224,7 +199,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   void _onJobTap() {
     _showPicker<Map<String, String>>(
-      title: "Select Occupation",
+      title: "Pilih Pekerjaan",
       items: _jobOptions,
       itemLabelBuilder: (item) => item['label']!,
       onSelectedItemChanged: (val) {
@@ -239,7 +214,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   void _onRegencyTap() {
     _showPicker<Regency>(
-      title: "Select Regency/City",
+      title: "Pilih Kabupaten/Kota",
       items: _regencies,
       itemLabelBuilder: (item) => item.name,
       onSelectedItemChanged: (val) async {
@@ -261,7 +236,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             }
           } catch (e) {
             Navigator.pop(context);
-            _showError("Failed to load districts");
+            _showError("Gagal memuat kecamatan");
           }
         }
       },
@@ -269,10 +244,10 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   }
 
   void _onDistrictTap() {
-    if (_selectedRegency == null) return _showError("Please select Regency/City first");
+    if (_selectedRegency == null) return _showError("Silakan pilih Kabupaten/Kota terlebih dahulu");
     
     _showPicker<District>(
-      title: "Select District",
+      title: "Pilih Kecamatan",
       items: _districts,
       itemLabelBuilder: (item) => item.name,
       onSelectedItemChanged: (val) async {
@@ -292,7 +267,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             }
           } catch (e) {
             Navigator.pop(context);
-            _showError("Failed to load villages");
+            _showError("Gagal memuat desa/kelurahan");
           }
         }
       },
@@ -300,10 +275,10 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   }
 
   void _onVillageTap() {
-    if (_selectedDistrict == null) return _showError("Please select District first");
+    if (_selectedDistrict == null) return _showError("Silakan pilih Kecamatan terlebih dahulu");
     
     _showPicker<Village>(
-      title: "Select Village",
+      title: "Pilih Desa/Kelurahan",
       items: _villages,
       itemLabelBuilder: (item) => item.name,
       onSelectedItemChanged: (val) {
@@ -322,19 +297,19 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   void _submitData() async {
     // Validation
-    if (_nameController.text.isEmpty) return _showError("Name is required");
-    if (_nikController.text.length != 16) return _showError("NIK must be 16 digits");
-    if (_selectedDate == null) return _showError("Date of birth is required");
-    if (_selectedGender == null) return _showError("Gender is required");
-    if (_selectedJob == null) return _showError("Occupation is required");
-    if (_selectedVillage == null) return _showError("Please complete region data");
-    if (_detailAddressController.text.isEmpty) return _showError("Detail address is required");
+    if (_nameController.text.isEmpty) return _showError("Nama wajib diisi");
+    if (_nikController.text.length != 16) return _showError("NIK harus 16 digit");
+    if (_selectedDate == null) return _showError("Tanggal lahir wajib diisi");
+    if (_selectedGender == null) return _showError("Jenis kelamin wajib dipilih");
+    if (_selectedJob == null) return _showError("Pekerjaan wajib dipilih");
+    if (_selectedVillage == null) return _showError("Silakan lengkapi data wilayah");
+    if (_detailAddressController.text.isEmpty) return _showError("Alamat detail wajib diisi");
 
     setState(() => _isLoading = true);
 
     try {
       final currentUser = UserService.currentUser;
-      if (currentUser == null) throw Exception("Session expired");
+      if (currentUser == null) throw Exception("Sesi telah berakhir");
 
       final fullAddress = "${_detailAddressController.text}, ${_selectedVillage!.name}, ${_selectedDistrict!.name}, ${_selectedRegency!.name}";
 
@@ -358,11 +333,11 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         showCupertinoDialog(
           context: context,
           builder: (ctx) => CupertinoAlertDialog(
-            title: const Text('Success'),
-            content: const Text('Profile completed successfully!'),
+            title: const Text('Berhasil'),
+            content: const Text('Profil berhasil dilengkapi!'),
             actions: [
               CupertinoDialogAction(
-                child: const Text('Continue'),
+                child: const Text('Lanjutkan'),
                 onPressed: () {
                   Navigator.pop(ctx);
                   Navigator.pushReplacement(
@@ -413,7 +388,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    value ?? "Select $label",
+                    value ?? "Pilih $label",
                     style: TextStyle(
                       color: value != null ? AppTheme.textPrimary : AppTheme.textSecondary.withOpacity(0.5),
                       fontSize: 16,
@@ -448,7 +423,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     return CupertinoPageScaffold(
       backgroundColor: AppTheme.background,
       navigationBar: CupertinoNavigationBar(
-        middle: const Text("Complete Profile"),
+        middle: const Text("Lengkapi Profil"),
         backgroundColor: AppTheme.background,
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -475,14 +450,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       children: [
                         const Icon(CupertinoIcons.info, color: CupertinoColors.systemOrange),
                         const SizedBox(width: 12),
-                        const Expanded(child: Text("Please complete your personal data.", style: TextStyle(fontSize: 13))),
+                        const Expanded(child: Text("Silakan lengkapi data pribadi Anda.", style: TextStyle(fontSize: 13))),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // --- PERSONAL DATA ---
-                  const Text("Full Name", style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                  const Text("Nama Lengkap", style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                   const SizedBox(height: 8),
                   CupertinoTextField(
                     controller: _nameController,
@@ -495,7 +469,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  const Text("NIK (ID Number)", style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                  const Text("NIK (Nomor Identitas Kependudukan)", style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                   const SizedBox(height: 8),
                   CupertinoTextField(
                     controller: _nikController,
@@ -510,59 +484,55 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // DATE OF BIRTH
                   _buildSelectableInput(
-                    label: "Date of Birth",
+                    label: "Tanggal Lahir",
                     value: _formatDateDisplay(_selectedDate),
                     onTap: _showDatePicker,
                     icon: CupertinoIcons.calendar,
                   ),
 
-                  // GENDER
                   _buildSelectableInput(
-                    label: "Gender",
+                    label: "Jenis Kelamin",
                     value: _getGenderLabel(_selectedGender),
                     onTap: _onGenderTap,
                     icon: CupertinoIcons.person_2_fill,
                   ),
 
-                  // OCCUPATION
                   _buildSelectableInput(
-                    label: "Occupation",
+                    label: "Pekerjaan",
                     value: _selectedJob,
                     onTap: _onJobTap,
                     icon: CupertinoIcons.briefcase_fill,
                   ),
 
                   const Divider(height: 32),
-                  const Text("Region Data", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text("Data Wilayah", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 16),
 
-                  // --- REGION DATA ---
                   _buildSelectableInput(
-                    label: "Regency/City",
+                    label: "Kabupaten/Kota",
                     value: _selectedRegency?.name,
                     onTap: _onRegencyTap,
                     icon: CupertinoIcons.building_2_fill,
                   ),
                   _buildSelectableInput(
-                    label: "District",
+                    label: "Kecamatan",
                     value: _selectedDistrict?.name,
                     onTap: _onDistrictTap,
                     icon: CupertinoIcons.map_pin_ellipse,
                   ),
                   _buildSelectableInput(
-                    label: "Village",
+                    label: "Desa/Kelurahan",
                     value: _selectedVillage?.name,
                     onTap: _onVillageTap,
                     icon: CupertinoIcons.flag_fill,
                   ),
 
-                  const Text("Detail Address", style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                  const Text("Alamat Detail", style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                   const SizedBox(height: 8),
                   CupertinoTextField(
                     controller: _detailAddressController,
-                    placeholder: "Street, RT/RW",
+                    placeholder: "Jalan, RT/RW",
                     maxLines: 2,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -583,7 +553,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                       onPressed: _isLoading ? null : _submitData,
                       child: _isLoading
                           ? const CupertinoActivityIndicator(color: AppTheme.primaryDark)
-                          : const Text("Save", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          : const Text("Simpan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
