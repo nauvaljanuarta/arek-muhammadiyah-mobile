@@ -91,7 +91,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     showCupertinoDialog(
       context: context,
       builder: (_) => CupertinoAlertDialog(
-        title: const Text('Attention'),
+        title: const Text('Perhatian'),
         content: Text(message),
         actions: [
           CupertinoDialogAction(
@@ -112,7 +112,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   }) {
     FocusScope.of(context).unfocus();
     if (items.isEmpty) {
-      _showError("No data available for this selection.");
+      _showError("Data tidak ditemukan.");
       return;
     }
 

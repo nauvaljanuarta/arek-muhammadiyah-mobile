@@ -46,10 +46,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _handleRegister() async {
-    // 1. Tutup Keyboard seketika agar UI tidak terasa berat
     FocusScope.of(context).unfocus();
 
-    // Validasi
     if (_nameController.text.isEmpty) {
       _showError("Name is required");
       return;
@@ -75,7 +73,6 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // 2. Nyalakan Loading Indicator SEGERA
     setState(() => _isLoading = true);
 
     try {
@@ -92,8 +89,8 @@ class _RegisterPageState extends State<RegisterPage> {
       showCupertinoDialog(
         context: context,
         builder: (ctx) => CupertinoAlertDialog(
-          title: const Text('Success'),
-          content: const Text('Registration successful. Please login to complete your profile.'),
+          title: const Text('Sukses'),
+            content: const Text('Pendaftaran berhasil. Silakan login untuk melengkapi profil Anda.'),
           actions: [
             CupertinoDialogAction(
               child: const Text('Login'),
@@ -140,14 +137,14 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 const Icon(
                   CupertinoIcons.person_add_solid,
-                  size: 64,
+                  size: 56,
                   color: AppTheme.primaryDark,
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   "Create Account",
                   style: TextStyle(
-                    fontSize: 24, 
+                    fontSize: 20, 
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                     fontFamily: 'Montserrat',
@@ -157,7 +154,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Sign up to get started with Muhammadiyah App",
+                  "Daftar untuk memulai Aplikasi Muhammadiyah",
                   style: TextStyle(
                     color: AppTheme.textSecondary,
                     fontFamily: 'Montserrat',
@@ -171,7 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 // Input Nama
                 CupertinoTextField(
                   controller: _nameController,
-                  placeholder: "Full Name",
+                  placeholder: "Nama Lengkap",
                   padding: const EdgeInsets.all(16),
                   prefix: const Padding(
                     padding: EdgeInsets.only(left: 16, right: 8),
@@ -188,7 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 // Input Telepon
                 CupertinoTextField(
                   controller: _phoneController,
-                  placeholder: "Phone Number",
+                  placeholder: "Nomor telepon",
                   keyboardType: TextInputType.phone,
                   padding: const EdgeInsets.all(16),
                   prefix: const Padding(
@@ -233,7 +230,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 // Konfirmasi Password
                 CupertinoTextField(
                   controller: _confirmPassController,
-                  placeholder: "Confirm Password",
+                  placeholder: "Konfirmasi Password",
                   obscureText: _obscureConfirmPass,
                   padding: const EdgeInsets.all(16),
                   prefix: const Padding(
@@ -263,12 +260,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: CupertinoButton(
                     padding: EdgeInsets.zero,
                     color: AppTheme.primaryDark,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     onPressed: _isLoading ? null : _handleRegister, 
                     child: _isLoading 
                       ? const CupertinoActivityIndicator(color: AppTheme.primaryDark) 
                       : const Text(
-                          "Register", 
+                          "Daftar", 
                           style: TextStyle(
                             color: Colors.white, 
                             fontWeight: FontWeight.bold,
@@ -286,7 +283,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "Already have an account? ", 
+                      "Sudah punya akun? ", 
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontFamily: 'Montserrat',
@@ -297,7 +294,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: const Text(
-                        "Login here",
+                        "Login disini",
                         style: TextStyle(
                           color: AppTheme.primaryDark,
                           fontWeight: FontWeight.bold,
