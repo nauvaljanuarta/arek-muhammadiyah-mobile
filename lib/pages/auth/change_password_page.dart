@@ -19,6 +19,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _obscureNew = true;
   bool _obscureConfirm = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _invalidateSession();
+  }
+
+  Future<void> _invalidateSession() async {
+    await UserService.logout(); 
+  }
+
   void _handleChangePassword() async {
     FocusScope.of(context).unfocus();
 
@@ -35,14 +45,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       return;
     }
 
-    // 2. Nyalakan Loading Spinner (Animasi Puteran)
     setState(() => _isLoading = true);
 
     try {
       final user = UserService.currentUser;
       if (user == null) throw Exception("Sesi habis");
 
-      // Proses ke Backend (Di sini jedanya terjadi)
       await UserService.updateUser(user.id.toString(), {
         'password': _newPassController.text,
         'must_change_password': false, 
@@ -74,7 +82,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     } catch (e) {
       if (mounted) _showError(e.toString().replaceAll('Exception: ', ''));
     } finally {
-      // 3. Matikan Loading Spinner
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -99,8 +106,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: AppTheme.background,
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text("Change New Password"),
+      navigationBar: CupertinoNavigationBar(
+        middle: Text("Ganti Password"),
+        leading: CupertinoNavigationBarBackButton(
+          color: AppTheme.textPrimary,
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              CupertinoPageRoute(builder: (_) => const LoginPage()), (route) => false,
+            );
+          },
+        ),
       ),
       child: SafeArea(
         child: Padding(
@@ -135,7 +150,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               
               CupertinoTextField(
                 controller: _newPassController,
-                placeholder: "New Password",
+                placeholder: "Password Baru",
                 obscureText: _obscureNew,
                 padding: const EdgeInsets.all(16),
                 prefix: const Padding(
@@ -161,7 +176,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
               CupertinoTextField(
                 controller: _confirmPassController,
-                placeholder: "Confirm New Password",
+                placeholder: "Konfirmasi Password Baru",
                 obscureText: _obscureConfirm,
                 padding: const EdgeInsets.all(16),
                 prefix: const Padding(
@@ -191,11 +206,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
                   color: AppTheme.primaryDark,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   onPressed: _isLoading ? null : _handleChangePassword,
                   child: _isLoading
                       ? const CupertinoActivityIndicator(color: AppTheme.primaryDark)
-                      : const Text("Save Password", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      : const Text("Simpan Password Baru", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
