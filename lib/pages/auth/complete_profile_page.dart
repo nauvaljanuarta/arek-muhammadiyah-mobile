@@ -5,6 +5,7 @@ import '../../services/user_service.dart';
 import '../../config/theme/theme.dart';
 import '../home/home_page.dart';
 import '../../models/region.dart';
+import '../../widgets/profile/searchable_modal.dart';
 
 class CompleteProfilePage extends StatefulWidget {
   const CompleteProfilePage({super.key});
@@ -182,7 +183,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     }
   }
 
-
   void _onGenderTap() {
     _showPicker<Map<String, String>>(
       title: "Pilih Jenis Kelamin",
@@ -288,82 +288,102 @@ void _onJobTap() {
   }
 }
 
-
-
   void _onRegencyTap() {
-    _showPicker<Regency>(
-      title: "Pilih Kabupaten/Kota",
-      items: _regencies,
-      itemLabelBuilder: (item) => item.name,
-      onSelectedItemChanged: (val) async {
-        if (_selectedRegency != val) {
-          setState(() {
-            _selectedRegency = val;
-            _selectedDistrict = null;
-            _selectedVillage = null;
-            _districts = [];
-            _villages = [];
-          });
-          
-          _showLoadingIndicator();
-          try {
-            final districts = await UserService.getDistricts(val.id);
-            if (mounted) {
-              Navigator.pop(context);
-              setState(() => _districts = districts);
-            }
-          } catch (e) {
-            Navigator.pop(context);
-            _showError("Gagal memuat kecamatan");
-          }
+  showSearchableModal<Regency>(
+    context: context,
+    title: "Pilih Kabupaten/Kota",
+    items: _regencies,
+    itemLabel: (e) => e.name,
+    onSelected: (val) async {
+      if (_selectedRegency?.id == val.id) return;
+
+      setState(() {
+        _selectedRegency = val;
+        _selectedDistrict = null;
+        _selectedVillage = null;
+        _districts = [];
+        _villages = [];
+      });
+
+      _showLoadingIndicator();
+
+      try {
+        final districts = await UserService.getDistricts(val.id);
+        if (mounted) {
+          Navigator.pop(context); 
+          setState(() => _districts = districts);
         }
-      },
-    );
-  }
+      } catch (_) {
+        Navigator.pop(context);
+        _showError("Gagal memuat kecamatan");
+      }
+    },
+  );
+}
+
 
   void _onDistrictTap() {
-    if (_selectedRegency == null) return _showError("Silakan pilih Kabupaten/Kota terlebih dahulu");
-    
-    _showPicker<District>(
-      title: "Pilih Kecamatan",
-      items: _districts,
-      itemLabelBuilder: (item) => item.name,
-      onSelectedItemChanged: (val) async {
-        if (_selectedDistrict != val) {
-          setState(() {
-            _selectedDistrict = val;
-            _selectedVillage = null;
-            _villages = [];
-          });
+  if (_selectedRegency == null) {
+    _showError("Silakan pilih Kabupaten/Kota terlebih dahulu");
+    return;
+  }
 
-          _showLoadingIndicator();
-          try {
-            final villages = await UserService.getVillages(_selectedRegency!.id, val.id);
-            if (mounted) {
-              Navigator.pop(context);
-              setState(() => _villages = villages);
-            }
-          } catch (e) {
-            Navigator.pop(context);
-            _showError("Gagal memuat desa/kelurahan");
-          }
+  showSearchableModal<District>(
+    context: context,
+    title: "Pilih Kecamatan",
+    items: _districts,
+    itemLabel: (e) => e.name,
+    onSelected: (val) async {
+      setState(() {
+        _selectedDistrict = val;
+        _selectedVillage = null;
+        _villages = [];
+      });
+
+      _showLoadingIndicator();
+      try {
+        final villages = await UserService.getVillages(
+          _selectedRegency!.id,
+          val.id,
+        );
+
+        if (mounted) {
+          Navigator.pop(context);
+          setState(() => _villages = villages);
         }
-      },
-    );
+      } catch (_) {
+        Navigator.pop(context);
+        _showError("Gagal memuat desa/kelurahan");
+      }
+    },
+  );
+}
+
+
+void _onVillageTap() {
+  if (_selectedDistrict == null) {
+    _showError("Silakan pilih Kecamatan terlebih dahulu");
+    return;
   }
 
-  void _onVillageTap() {
-    if (_selectedDistrict == null) return _showError("Silakan pilih Kecamatan terlebih dahulu");
-    
-    _showPicker<Village>(
-      title: "Pilih Desa/Kelurahan",
-      items: _villages,
-      itemLabelBuilder: (item) => item.name,
-      onSelectedItemChanged: (val) {
-        setState(() => _selectedVillage = val);
-      },
-    );
+  if (_villages.isEmpty) {
+    _showError("Data desa belum tersedia");
+    return;
   }
+
+  showSearchableModal<Village>(
+    context: context,
+    title: "Pilih Desa / Kelurahan",
+    items: _villages,
+    itemLabel: (e) => e.name,
+    onSelected: (val) {
+      setState(() {
+        _selectedVillage = val;
+      });
+    },
+  );
+}
+
 
   void _showLoadingIndicator() {
     showCupertinoDialog(
