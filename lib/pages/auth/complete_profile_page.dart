@@ -197,20 +197,98 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     }
   }
 
-  void _onJobTap() {
-    _showPicker<Map<String, String>>(
-      title: "Pilih Pekerjaan",
-      items: _jobOptions,
-      itemLabelBuilder: (item) => item['label']!,
-      onSelectedItemChanged: (val) {
-        setState(() => _selectedJob = val['value']);
-      },
-    );
-    // Set default
-    if (_selectedJob == null) {
-      setState(() => _selectedJob = _jobOptions[0]['value']);
-    }
+void _onJobTap() {
+  FocusScope.of(context).unfocus();
+
+  showCupertinoModalPopup(
+    context: context,
+    builder: (_) => Center(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.8, 
+        height: 360,
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: CupertinoColors.systemBackground,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                "Pilih Pekerjaan",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                itemCount: _jobOptions.length,
+                separatorBuilder: (_, _) => const Divider(height: 0.4),
+                itemBuilder: (context, index) {
+                  final job = _jobOptions[index];
+                  final isSelected = _selectedJob == job['value'];
+
+                  return CupertinoButton(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    onPressed: () {
+                      setState(() {
+                        _selectedJob = job['value'];
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            job['label']!,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? AppTheme.primaryDark
+                                  : AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          const Icon(
+                            CupertinoIcons.check_mark,
+                            size: 18,
+                            color: AppTheme.primaryDark,
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              onPressed: () => Navigator.pop(context),
+              child: SizedBox(
+                width: double.infinity,
+                child : const Center(child : Text("Tutup")))
+                 ,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  if (_selectedJob == null) {
+    setState(() => _selectedJob = _jobOptions[0]['value']);
   }
+}
+
+
 
   void _onRegencyTap() {
     _showPicker<Regency>(
