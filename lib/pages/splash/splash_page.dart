@@ -29,8 +29,9 @@ class _SplashPageState extends State<SplashPage> {
       ..setLooping(false)
       ..setVolume(0);
 
-    _initializeVideo = _controller.initialize().then((_) {
+    _initializeVideo = _controller.initialize().then((_) async {
       setState(() {});
+      await _controller.setPlaybackSpeed(1.9); 
       _controller.play();
     });
 
@@ -121,7 +122,7 @@ Future<void> _navigateNext() async {
               );
             } else {
               // Loading indicator saat video buffering/init
-              return const CupertinoActivityIndicator(radius: 20);
+              return const CupertinoActivityIndicator(radius: 10);
             }
           },
         ),
