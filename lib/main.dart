@@ -22,6 +22,7 @@ class MuhammadiyahApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         DefaultMaterialLocalizations.delegate,

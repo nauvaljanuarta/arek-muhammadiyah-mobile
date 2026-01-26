@@ -3,6 +3,7 @@ import '../models/user.dart';
 import '../models/region.dart';
 import 'api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum AuthStatus {
   authenticated,
@@ -14,26 +15,35 @@ enum AuthStatus {
 class UserService {
   static final ApiClient _client = ApiClient();
   static User? currentUser;
-  static String? _token;
 
-  static const String _adminDefaultPassword = 'password123'; 
+  static final _adminDefaultPassword = dotenv.env['ADMIN_DEFAULT_PASSWORD']; 
 
-  static String? get token => _token;
 
-  static Future<AuthStatus> checkAuthStatus() async {
-    if (currentUser == null) {
-      await loadUserFromStorage();
-    }
+static Future<AuthStatus> checkAuthStatus() async {
+  final prefs = await SharedPreferences.getInstance();
 
-    if (currentUser == null) return AuthStatus.unauthenticated;
+  final userJson = prefs.getString('user');
+  if (userJson == null) return AuthStatus.unauthenticated;
 
-    final prefs = await SharedPreferences.getInstance();
-    final isDefaultPass = prefs.getBool('is_using_default_pass') ?? false;
+  final user = User.fromJson(jsonDecode(userJson));
+  currentUser = user;
 
-    if (isDefaultPass) return AuthStatus.passwordChangeRequired;
-    if (!currentUser!.isProfileComplete) return AuthStatus.profileIncomplete;
+  final isDefaultPass = prefs.getBool('is_using_default_pass') ?? false;
 
-    return AuthStatus.authenticated;
+  if (isDefaultPass) return AuthStatus.passwordChangeRequired;
+  if (!user.isProfileComplete) return AuthStatus.profileIncomplete;
+
+  return AuthStatus.authenticated;
+}
+
+
+static Future<bool> validateToken() async {
+  try {
+    final response = await _client.get('/auth/navbar');
+    return response.statusCode == 200;
+  } catch (_) {
+    return false;
+  }
 }
 
 
@@ -51,7 +61,6 @@ class UserService {
       final userData = data['data']?['user'];
 
       if (token != null && userData != null) {
-        _token = token;
         currentUser = User.fromJson(userData);
         await prefs.setString('token', token);
         await prefs.setString('user', jsonEncode(userData));
@@ -109,7 +118,6 @@ class UserService {
     await prefs.remove('user');
     await prefs.remove('is_using_default_pass'); // Bersihkan flag
     
-    _token = null;
     currentUser = null;
   }
 
@@ -119,7 +127,6 @@ class UserService {
     final savedToken = prefs.getString('token');
 
     if (userJson != null && savedToken != null) {
-      _token = savedToken;
       try {
         currentUser = User.fromJson(jsonDecode(userJson));
       } catch (e) {
@@ -128,12 +135,6 @@ class UserService {
     }
   }
 
-  static Future<bool> isStillLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-    final token = prefs.getString('token');
-    return isLoggedIn && token != null && token.isNotEmpty;
-  }
 
   // --- WILAYAH FETCHING ---
   static Future<List<Regency>> getCities() async {

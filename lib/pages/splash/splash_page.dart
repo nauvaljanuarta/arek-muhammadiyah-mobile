@@ -56,37 +56,37 @@ Future<void> _navigateNext() async {
   final token = prefs.getString('token');
 
   Widget nextPage = const LoginPage();
+  if (token == null || token.isEmpty) {
+    nextPage = const LoginPage();
+  } else {
+    try {
+      final isValid = await UserService.validateToken();
 
-  if (token != null && token.isNotEmpty) {
-    await UserService.loadUserFromStorage();
-
-    if (UserService.currentUser != null) {
-      try {
+      if (!isValid) {
+        await UserService.logout();
+        nextPage = const LoginPage();
+      } else {
         final status = await UserService.checkAuthStatus();
 
         switch (status) {
           case AuthStatus.authenticated:
             nextPage = const HomePage();
             break;
-
           case AuthStatus.profileIncomplete:
             nextPage = const CompleteProfilePage();
             break;
-
           case AuthStatus.passwordChangeRequired:
             nextPage = const ChangePasswordPage();
             break;
-
-          case AuthStatus.unauthenticated:
+          default:
             await UserService.logout();
             nextPage = const LoginPage();
-            break;
         }
-      } catch (e) {
-        debugPrint("Splash Error: $e");
-        await UserService.logout();
-        nextPage = const LoginPage();
       }
+    } catch (e) {
+      debugPrint("Splash Error: $e");
+      await UserService.logout();
+      nextPage = const LoginPage();
     }
   }
 

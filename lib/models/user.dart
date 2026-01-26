@@ -93,7 +93,6 @@ class User {
       districtName: json['district_name']?.toString(),
       cityId: json['city_id']?.toString(),
       cityName: json['city_name']?.toString(),
-      // Handle berbagai format boolean dari backend (1/0/"1"/"true"/true)
       mustChangePassword: json['must_change_password'] == true || 
                           json['must_change_password'] == 1 || 
                           json['must_change_password'] == "1",

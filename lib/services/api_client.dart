@@ -5,14 +5,13 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/user_service.dart'; 
 import '../pages/auth/login_page.dart'; 
-import '../../main.dart'; // Import navigatorKey
+import '../../main.dart'; 
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
   ApiClient._internal();
 
-  // Ganti sesuai IP Laptop/Server kamu
   final String baseUrl = Connection.baseUrl; 
 
   Future<Map<String, String>> getHeaders({bool withAuth = true}) async {
@@ -27,36 +26,51 @@ class ApiClient {
     return headers;
   }
 
+  bool _isHandling401 = false;
+
   Future<http.Response> _handleResponse(http.Response response) async {
     if (response.statusCode == 401) {
-      
-      final requestUrl = response.request?.url.toString().toLowerCase() ?? '';
-      
-      if (requestUrl.contains('/auth/login')) {
-        final body = jsonDecode(response.body);
-        throw Exception(body['message'] ?? "Nomor Telepon atau Password salah.");
+      if (_isHandling401) {
+        throw Exception("Unauthorized");
       }
 
-      
-      await UserService.logout(); 
-      
-      if (navigatorKey.currentContext != null) {
-        Navigator.of(navigatorKey.currentContext!).pushAndRemoveUntil(
-          CupertinoPageRoute(builder: (_) => const LoginPage()),
-          (route) => false,
+      _isHandling401 = true;
+      await UserService.logout();
+
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        await showCupertinoDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => CupertinoAlertDialog(
+            title: const Text("Sesi Berakhir"),
+            content: const Text(
+              "Sesi login kamu telah habis. Silakan login kembali.",
+            ),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushAndRemoveUntil(
+                    CupertinoPageRoute(builder: (_) => const LoginPage()),
+                    (_) => false,
+                  );
+                },
+              ),
+            ],
+          ),
         );
       }
-      
-      throw Exception("Sesi login telah habis. Silakan login kembali.");
-    }
 
-    if (response.statusCode >= 400) {
-       final body = jsonDecode(response.body);
-       throw Exception(body['message'] ?? "Terjadi kesalahan pada server (${response.statusCode})");
+      _isHandling401 = false;
+      throw Exception("Unauthorized");
     }
 
     return response;
   }
+
+
 
   Future<http.Response> get(String endpoint, {bool withAuth = true}) async {
     final url = Uri.parse('$baseUrl$endpoint');
