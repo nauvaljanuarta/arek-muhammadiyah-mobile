@@ -63,7 +63,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _loadingCategories = false);
-        _showDialog('Error', 'Failed to load categories: $e');
+        _showDialog('Error', 'Gagal memuat kategori: $e');
       }
     }
   }
@@ -81,8 +81,8 @@ class _AddTicketPageState extends State<AddTicketPage> {
       if (result != null && result.files.isNotEmpty) {
         if (_selectedFiles.length + result.files.length > 10) {
           _showDialog(
-            'Limit Exceeded',
-            'Maximum 10 files allowed. You can add ${10 - _selectedFiles.length} more.',
+            'Batas Terlampaui',
+            'Maksimal 10 file. Anda dapat menambah ${10 - _selectedFiles.length} lagi.',
           );
           return;
         }
@@ -104,7 +104,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
         }
 
         if (invalidFiles.isNotEmpty) {
-          _showDialog('Invalid Files', 'Some files were rejected:\n\n${invalidFiles.join('\n')}');
+          _showDialog('File Tidak Valid', 'Beberapa file ditolak:\n\n${invalidFiles.join('\n')}');
         }
 
         if (validFiles.isNotEmpty) {
@@ -114,7 +114,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
         }
       }
     } catch (e) {
-      _showDialog('Error', 'Failed to pick files: $e');
+      _showDialog('Error', 'Gagal memilih file: $e');
     }
   }
 
@@ -129,7 +129,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
 
       if (file != null) {
         if (_selectedFiles.length >= 10) {
-          _showDialog('Limit Exceeded', 'Maximum 10 files reached');
+          _showDialog('Batas Terlampaui', 'Maksimal 10 file sudah tercapai');
           return;
         }
 
@@ -141,27 +141,27 @@ class _AddTicketPageState extends State<AddTicketPage> {
             _selectedFiles.add(fileObj);
           });
         } else {
-          _showDialog('Invalid Photo', validation.error);
+          _showDialog('Foto Tidak Valid', validation.error);
         }
       }
     } catch (e) {
-      _showDialog('Error', 'Failed to take photo: $e');
+      _showDialog('Error', 'Gagal mengambil foto: $e');
     }
   }
 
   FileValidation _validateFile(File file) {
     try {
       if (!file.existsSync()) {
-        return FileValidation(isValid: false, error: 'File not found');
+        return FileValidation(isValid: false, error: 'File tidak ditemukan');
       }
 
       final fileSize = file.lengthSync();
       // Batas per file: 10 MB (sesuaikan dengan backend)
       if (fileSize > 10 * 1024 * 1024) {
-        return FileValidation(isValid: false, error: 'File too large (>10MB)');
+        return FileValidation(isValid: false, error: 'Ukuran file terlalu besar (>10MB)');
       }
       if (fileSize == 0) {
-        return FileValidation(isValid: false, error: 'File is empty');
+        return FileValidation(isValid: false, error: 'File kosong');
       }
 
       return FileValidation(isValid: true, error: '');
@@ -183,7 +183,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
     if (totalSize > 50 * 1024 * 1024) {
       return FileValidation(
         isValid: false, 
-        error: 'Total size exceeds 50MB. Current: ${(totalSize / 1024 / 1024).toStringAsFixed(1)}MB'
+        error: 'Total ukuran melebihi 50MB. Saat ini: ${(totalSize / 1024 / 1024).toStringAsFixed(1)}MB'
       );
     }
     return FileValidation(isValid: true, error: '');
@@ -199,27 +199,27 @@ class _AddTicketPageState extends State<AddTicketPage> {
     showCupertinoModalPopup(
       context: context,
       builder: (ctx) => CupertinoActionSheet(
-        title: const Text('Attach File'),
+        title: const Text('Lampirkan File'),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () {
               Navigator.pop(ctx);
               _pickFiles();
             },
-            child: const Text('Select from Gallery / Files'),
+            child: const Text('Pilih dari Galeri / File'),
           ),
           CupertinoActionSheetAction(
             onPressed: () {
               Navigator.pop(ctx);
               _pickImageFromCamera();
             },
-            child: const Text('Take Photo'),
+            child: const Text('Ambil Foto'),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           isDefaultAction: true,
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
       ),
     );
@@ -232,13 +232,13 @@ class _AddTicketPageState extends State<AddTicketPage> {
     FocusScope.of(context).unfocus();
 
     if (_titleController.text.isEmpty || _descriptionController.text.isEmpty || _selectedCategory == null) {
-      _showDialog('Missing Information', 'Please complete Title, Description, and Category.');
+      _showDialog('Informasi Tidak Lengkap', 'Silakan lengkapi Judul, Deskripsi, dan Kategori.');
       return;
     }
 
     final sizeValidation = _validateTotalFileSize();
     if (!sizeValidation.isValid) {
-      _showDialog('File Too Large', sizeValidation.error);
+      _showDialog('File Terlalu Besar', sizeValidation.error);
       return;
     }
 
@@ -259,8 +259,8 @@ class _AddTicketPageState extends State<AddTicketPage> {
       showCupertinoDialog(
         context: context,
         builder: (ctx) => CupertinoAlertDialog(
-          title: const Text('Success'),
-          content: const Text('Your ticket has been submitted successfully.'),
+          title: const Text('Berhasil'),
+          content: const Text('Tiket Anda berhasil dikirim.'),
           actions: [
             CupertinoDialogAction(
               child: const Text('OK'),
@@ -280,11 +280,11 @@ class _AddTicketPageState extends State<AddTicketPage> {
       String errorStr = e.toString().toLowerCase();
 
       if (errorStr.contains('too large')) {
-        userFriendlyMessage = 'File size exceeded (10MB Maks).';
+        userFriendlyMessage = 'Ukuran file melebihi batas (Maks 10MB).';
       } else if (errorStr.contains('connection') || errorStr.contains('timeout')) {
-        userFriendlyMessage = 'Connection Time Out.';
+        userFriendlyMessage = 'Koneksi Waktu Habis.';
       } else {
-        userFriendlyMessage = 'Failed to submit ticket. Please try again later.';
+        userFriendlyMessage = 'Gagal mengirim tiket. Silakan coba lagi nanti.';
       }
 
       _showDialog('Error', userFriendlyMessage);
@@ -301,7 +301,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
         content: Text(message),
         actions: [
           CupertinoDialogAction(
-            child: const Text('OK'),
+            child: const Text('Ok'),
             onPressed: () => Navigator.pop(ctx),
           ),
         ],
@@ -310,54 +310,69 @@ class _AddTicketPageState extends State<AddTicketPage> {
   }
 
   void _showCategoryPicker() {
-    if (_categories.isEmpty) return;
-    
-    // Tutup keyboard sebelum buka picker
-    FocusScope.of(context).unfocus();
+  if (_categories.isEmpty) return;
 
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => Container(
-        height: 250,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: CupertinoColors.separator, width: 0.0)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Select Category", style: TextStyle(fontWeight: FontWeight.bold)),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Text('Done'),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                ],
-              ),
-            ),
-            Expanded(
-              child: CupertinoPicker(
-                itemExtent: 32,
-                scrollController: FixedExtentScrollController(
-                  initialItem: _selectedCategory != null ? _categories.indexOf(_selectedCategory!) : 0,
-                ),
-                onSelectedItemChanged: (index) {
-                  setState(() => _selectedCategory = _categories[index]);
+  FocusScope.of(context).unfocus();
+
+  showCupertinoDialog(
+    context: context,
+    builder: (context) {
+      return CupertinoAlertDialog(
+        title: const Text("Pilih Kategori"),
+        content: SizedBox(
+          width: double.infinity,
+          height: 200,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _categories.length,
+            itemBuilder: (context, index) {
+              final category = _categories[index];
+              final isSelected = _selectedCategory?.id == category.id;
+
+              return CupertinoButton(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                onPressed: () {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                  Navigator.pop(context);
                 },
-                children: _categories.map((c) => Center(
-                  child: Text(c.name, style: const TextStyle(fontSize: 16)),
-                )).toList(),
-              ),
-            ),
-          ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      category.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? CupertinoColors.activeBlue
+                            : CupertinoColors.label,
+                      ),
+                    ),
+                    if (isSelected)
+                      const Icon(
+                        CupertinoIcons.check_mark,
+                        size: 18,
+                        color: CupertinoColors.activeBlue,
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
-      ),
-    );
-  }
+        actions: [
+          CupertinoDialogAction(
+            child: const Text("Batal"),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   // --- WIDGETS ---
 
@@ -391,10 +406,10 @@ class _AddTicketPageState extends State<AddTicketPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Attachments', style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
+        const Text('Lampiran', style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(
-          'Max 10 files (${_selectedFiles.length}/10). Images, PDF, Docs.',
+          'Maks 10 file (${_selectedFiles.length}/10). Gambar, PDF, Dokumen.',
           style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 12),
@@ -419,7 +434,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _selectedFiles.isEmpty ? 'Attach Files / Photos' : 'Add More',
+                  _selectedFiles.isEmpty ? 'Lampirkan File / Foto' : 'Tambah Lagi',
                   style: TextStyle(
                     color: _selectedFiles.length >= 10 ? AppTheme.textSecondary : AppTheme.primaryDark,
                     fontWeight: FontWeight.w600
@@ -488,7 +503,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
     return CupertinoPageScaffold(
       backgroundColor: AppTheme.background,
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Create Ticket'),
+        middle: const Text('Buat Tiket'),
         backgroundColor: AppTheme.background,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -506,14 +521,14 @@ class _AddTicketPageState extends State<AddTicketPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildFormField(
-                      label: 'Ticket Title *',
+                      label: 'Judul Tiket *',
                       controller: _titleController,
-                      placeholder: 'e.g., Request for Certificate',
+                      placeholder: 'Contoh: Permintaan Sertifikat',
                     ),
                     const SizedBox(height: 20),
                     
                     // Category Selector
-                    const Text('Category *', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 16)),
+                    const Text('Kategori *', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 16)),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: _showCategoryPicker,
@@ -528,7 +543,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              _selectedCategory?.name ?? 'Select Category',
+                              _selectedCategory?.name ?? 'Pilih Kategori',
                               style: TextStyle(
                                 color: _selectedCategory != null ? AppTheme.textPrimary : AppTheme.textSecondary.withOpacity(0.5),
                                 fontSize: 16
@@ -542,9 +557,9 @@ class _AddTicketPageState extends State<AddTicketPage> {
                     
                     const SizedBox(height: 20),
                     _buildFormField(
-                      label: 'Description *',
+                      label: 'Deskripsi *',
                       controller: _descriptionController,
-                      placeholder: 'Describe your issue or request clearly...',
+                      placeholder: 'Jelaskan masalah atau permintaan Anda dengan jelas...',
                       maxLines: 5,
                     ),
 
@@ -563,7 +578,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                         onPressed: _isSubmitting ? null : _submitForm,
                         child: _isSubmitting
                             ? const CupertinoActivityIndicator(color: AppTheme.primaryDark) 
-                            : const Text('SUBMIT TICKET', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            : const Text('Kirim', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                       ),
                     ),
                     const SizedBox(height: 40),

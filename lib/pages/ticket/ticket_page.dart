@@ -52,7 +52,7 @@ class _TicketPageState extends State<TicketPage> {
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Failed to load tickets: ${e.toString()}';
+        errorMessage = 'Gagal memuat tiket: ${e.toString()}';
       });
     }
   }
@@ -114,7 +114,7 @@ class _TicketPageState extends State<TicketPage> {
             slivers: [
               CupertinoSliverNavigationBar(
                 largeTitle: const Text(
-                  'My Tickets',
+                  'Tiket Saya',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
                     fontWeight: FontWeight.bold,
@@ -219,7 +219,7 @@ class _TicketPageState extends State<TicketPage> {
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'No Tickets Yet',
+                            'Belum Ada Tiket',
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 16,
@@ -229,7 +229,7 @@ class _TicketPageState extends State<TicketPage> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Tap the "+" button below to create a new ticket.',
+                            'Tekan tombol "+" di bawah untuk membuat tiket baru.',
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 14,

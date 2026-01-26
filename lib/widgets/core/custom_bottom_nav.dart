@@ -42,7 +42,7 @@ class CustomBottomNav extends StatelessWidget {
               ),
               _buildNavItem(
                 icon: CupertinoIcons.news_solid,
-                label: 'Articles',
+                label: 'Artikel',
                 index: 1,
                 isActive: currentIndex == 1,
               ),
@@ -60,7 +60,7 @@ class CustomBottomNav extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'Add Ticket',
+                      'Tambah Tiket',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 10,
@@ -73,7 +73,7 @@ class CustomBottomNav extends StatelessWidget {
               ),
               _buildNavItem(
                 icon: CupertinoIcons.doc_text_fill,
-                label: 'Tickets',
+                label: 'Tiket',
                 index: 2,
                 isActive: currentIndex == 2,
                 showBadge: updatedCount > 0, // Logika Badge
@@ -81,7 +81,7 @@ class CustomBottomNav extends StatelessWidget {
               ),
               _buildNavItem(
                 icon: CupertinoIcons.person_fill,
-                label: 'Profile',
+                label: 'Profil',
                 index: 3,
                 isActive: currentIndex == 3,
               ),

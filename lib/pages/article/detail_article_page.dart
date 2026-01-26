@@ -159,7 +159,7 @@ class DetailArticlePage extends StatelessWidget {
                             Expanded(
                               child: _buildInfoItem(
                                 icon: CupertinoIcons.person_fill,
-                                title: 'Author',
+                                title: 'Penulis',
                                 value: article.authorName,
                               ),
                             ),

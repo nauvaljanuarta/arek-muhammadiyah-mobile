@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart'; // Butuh Colors untuk shadow/decorations
+import 'package:flutter/material.dart'; 
 import '../../config/theme/theme.dart';
 import '../../models/article.dart';
 import '../../services/article_service.dart';
@@ -22,7 +22,7 @@ class ArticlePage extends StatefulWidget {
 }
 
 class _ArticlePageState extends State<ArticlePage> {
-  // State Variables
+  // Variabel State
   final List<Article> _articles = [];
   bool _isLoadingInitial = true;
   bool _isLoadingMore = false;
@@ -30,7 +30,7 @@ class _ArticlePageState extends State<ArticlePage> {
   int _currentPage = 1;
   final int _limit = 10;
   
-  // Search State
+  // State Pencarian
   String _searchQuery = "";
   Timer? _debounce;
 
@@ -52,7 +52,7 @@ class _ArticlePageState extends State<ArticlePage> {
     super.dispose();
   }
 
-  // --- LOGIC ---
+  // --- LOGIKA ---
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
@@ -114,7 +114,7 @@ class _ArticlePageState extends State<ArticlePage> {
           _isLoadingMore = false;
         });
       }
-      debugPrint('Error fetching articles: $e');
+      debugPrint('Error mengambil artikel: $e');
     }
   }
 
@@ -137,7 +137,7 @@ class _ArticlePageState extends State<ArticlePage> {
   }
 
   String _getPageTitle() {
-    return widget.categoryName ?? 'Articles';
+    return widget.categoryName ?? 'Artikel';
   }
 
   @override
@@ -184,7 +184,7 @@ class _ArticlePageState extends State<ArticlePage> {
                 child: CupertinoSearchTextField(
                   controller: _searchController,
                   onChanged: _onSearchChanged,
-                  placeholder: 'Search articles..',
+                  placeholder: 'Cari artikel..',
                   backgroundColor: CupertinoColors.white,
                   borderRadius: BorderRadius.circular(12),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -198,7 +198,7 @@ class _ArticlePageState extends State<ArticlePage> {
           // 4. Content List
           if (_isLoadingInitial)
             const SliverFillRemaining(
-              hasScrollBody: false, // Agar spinner berada di tengah viewport
+              hasScrollBody: false,
               child: Center(child: CupertinoActivityIndicator(radius: 15)),
             )
           else if (_articles.isEmpty)
@@ -212,8 +212,8 @@ class _ArticlePageState extends State<ArticlePage> {
                     const SizedBox(height: 16),
                     Text(
                       _searchQuery.isNotEmpty 
-                          ? 'No Articles Available "$_searchQuery"'
-                          : 'No Articles Available',
+                          ? 'Tidak ada Artikel "$_searchQuery"'
+                          : 'Tidak ada Artikel',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         color: AppTheme.textSecondary.withOpacity(0.7),

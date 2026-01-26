@@ -394,7 +394,6 @@ void _onVillageTap() {
   }
 
   void _submitData() async {
-    // Validation
     if (_nameController.text.isEmpty) return _showError("Nama wajib diisi");
     if (_nikController.text.length != 16) return _showError("NIK harus 16 digit");
     if (_selectedDate == null) return _showError("Tanggal lahir wajib diisi");

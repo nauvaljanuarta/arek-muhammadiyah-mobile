@@ -78,7 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
         slivers: [
           CupertinoSliverNavigationBar(
             largeTitle: const Text(
-              'Profile',
+              'Profil',
               style: TextStyle(
                 fontFamily: 'Montserrat',
                 fontWeight: FontWeight.bold,
@@ -109,7 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 height: MediaQuery.of(context).size.height * 0.6,
                 child: const Center(
                   child: Text(
-                    "Failed to load user data",
+                    "Gagal memuat data pengguna.",
                     style: TextStyle(fontFamily: 'Montserrat'),
                   ),
                 ),
@@ -124,11 +124,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildProfileInfoSection(),
                 const SizedBox(height: 24),
                 _buildProfileSection(
-                  title: 'Account',
+                  title: 'Akun',
                   items: [
                     _ProfileItem(
                       icon: CupertinoIcons.person_circle,
-                      title: 'Edit Profile',
+                      title: 'Edit Profil',
                       color: AppTheme.primaryMedium,
                       onTap: () async {
                         final updated = await Navigator.push(
@@ -144,7 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
                 _buildProfileSection(
-                  title: 'Other',
+                  title: 'Lainnya',
                   items: [
                     _ProfileItem(
                       icon: CupertinoIcons.square_arrow_right_fill,
@@ -243,7 +243,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              'Profile Information',
+              'Informasi Profil',
               style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 16,
@@ -268,40 +268,42 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 _buildInfoItem(
                   icon: CupertinoIcons.phone,
-                  title: 'Telphone',
+                  title: 'Nomor Telepon',
                   value: _user?.telp ?? '-',
                 ),
                 _buildDivider(),
                 _buildInfoItem(
                   icon: CupertinoIcons.calendar,
-                  title: 'Birth Date',
-                  value: _user?.birthDate != null 
-                    ? '${_user!.birthDate!.day}/${_user!.birthDate!.month}/${_user!.birthDate!.year}'
+                  title: 'Tanggal Lahir',
+                    value: _user?.birthDate != null 
+                    ? '${_user!.birthDate!.day.toString().padLeft(2, '0')}' '-' '${_user!.birthDate!.month.toString().padLeft(2, '0')}' '-' '${_user!.birthDate!.year}'
                     : '-',
-                ),
+                  ),
                 _buildDivider(),
                 _buildInfoItem(
                   icon: CupertinoIcons.person_2,
-                  title: 'Gender',
-                  value: _user?.gender?.name ?? '-',
+                  title: 'Jenis Kelamin',
+                  value: _user?.gender != null
+                  ? (_user!.gender!.name == 'male' ? 'Laki-laki' : 'Perempuan')
+                  : '-',
                 ),
                 _buildDivider(),
                 _buildInfoItem(
                   icon: CupertinoIcons.briefcase,
-                  title: 'Job',
+                  title: 'Pekerjaan',
                   value: _user?.job ?? '-',
                 ),
                 _buildDivider(),
                 _buildInfoItem(
                   icon: CupertinoIcons.location,
-                  title: 'Location',
+                  title: 'Lokasi',
                   value: _user?.locationInfo ?? '-', 
                   isMultiLine: true,
                 ),
                 _buildDivider(),
                 _buildInfoItem(
                   icon: CupertinoIcons.home,
-                  title: 'Address',
+                  title: 'Alamat Lengkap',
                   value: _user?.address ?? '-',
                   isMultiLine: true,
                 ),

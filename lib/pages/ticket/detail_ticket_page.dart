@@ -65,8 +65,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     final result = await showCupertinoModalPopup<bool>(
       context: context,
       builder: (BuildContext context) => CupertinoActionSheet(
-        title: const Text('Hapus Ticket'),
-        message: const Text('Apakah Anda yakin ingin menghapus ticket ini? Tindakan ini tidak dapat dibatalkan.'),
+        title: const Text('Hapus Tiket'),
+        message: const Text('Apakah Anda yakin ingin menghapus tiket ini? Tindakan ini tidak dapat dibatalkan.'),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () {
@@ -124,13 +124,13 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => const CupertinoAlertDialog(
-          title: Text('Downloading File'),
+          title: Text('Mengunduh File'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CupertinoActivityIndicator(),
               SizedBox(height: 16),
-              Text('Please wait...'),
+              Text('Mohon tunggu...'),
             ],
           ),
         ),
@@ -148,8 +148,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         }
       } else {
         _showErrorDialog(
-          'Download Gagal', 
-          'Gagal mendownload file ${document.fileName}'
+          'Unduh Gagal', 
+          'Gagal mengunduh file ${document.fileName}'
         );
       }
 
@@ -157,8 +157,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       if (mounted) Navigator.pop(context);
       
       _showErrorDialog(
-        'Error', 
-        'Gagal mendownload file:\n${e.toString()}'
+        'Kesalahan', 
+        'Gagal mengunduh file:\n${e.toString()}'
       );
     }
   }
@@ -189,8 +189,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       builder: (context) => CupertinoAlertDialog(
         title: const Text('Buka File Manual'),
         content: Text(
-          'File "$fileName" berhasil didownload tapi tidak bisa dibuka otomatis. '
-          'Silakan buka manual dari folder download.',
+          'File "$fileName" berhasil diunduh tapi tidak bisa dibuka otomatis. '
+          'Silakan buka manual dari folder unduhan.',
         ),
         actions: [
           CupertinoDialogAction(
@@ -375,7 +375,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       children: [
         const SizedBox(height: 16),
         const Text(
-          'Admin Response',
+          'Respons Admin',
           style: TextStyle(
             fontFamily: 'Montserrat',
             fontSize: 16,
@@ -422,7 +422,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                   const Spacer(),
                   if (widget.ticket.resolvedAt != null)
                     Text(
-                      'Resolved: ${_formatDate(widget.ticket.resolvedAt!)}',
+                      'Diselesaikan: ${_formatDate(widget.ticket.resolvedAt!)}',
                       style: const TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 12,
@@ -490,7 +490,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Jika ingin mengedit ticket. hapus ticket dan buat kembali ticketnya',
+                      'Jika ingin mengedit tiket, hapus tiket dan buat kembali tiketnya',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 13,
@@ -531,7 +531,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                   ),
                   SizedBox(width: 8),
                   Text(
-                    'Hapus Ticket',
+                    'Hapus Tiket',
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: 16,
@@ -553,7 +553,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       navigationBar: CupertinoNavigationBar(
         backgroundColor: AppTheme.background,
         middle: const Text(
-          'Ticket Details',
+          'Detail Tiket',
           style: TextStyle(
             fontFamily: 'Montserrat',
             color: CupertinoColors.black,
@@ -625,26 +625,26 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                             child: Column(
                               children: [
                                 _buildDetailItem(
-                                  'Category',
-                                  _selectedCategory?.name ?? 'No category',
+                                  'Kategori',
+                                  _selectedCategory?.name ?? 'Tidak ada kategori',
                                   CupertinoIcons.tag,
                                 ),
                                 const Divider(height: 16),
                                 _buildDetailItem(
-                                  'Created Date',
+                                  'Tanggal Dibuat',
                                   _formatDate(widget.ticket.createdAt),
                                   CupertinoIcons.calendar,
                                 ),
                                 const Divider(height: 16),
                                 _buildDetailItem(
-                                  'Last Updated',
+                                  'Terakhir Diperbarui',
                                   _formatDate(widget.ticket.updatedAt),
                                   CupertinoIcons.clock,
                                 ),
                                 if (widget.ticket.resolvedAt != null) ...[
                                   const Divider(height: 16),
                                   _buildDetailItem(
-                                    'Resolved Date',
+                                    'Tanggal Diselesaikan',
                                     _formatDate(widget.ticket.resolvedAt!),
                                     CupertinoIcons.checkmark_alt_circle,
                                   ),
@@ -655,7 +655,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           const SizedBox(height: 16),
 
                           const Text(
-                            'Description',
+                            'Deskripsi',
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 16,
@@ -689,7 +689,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           if (documents.isNotEmpty) ...[
                             const SizedBox(height: 16),
                             const Text(
-                              'Attached Files',
+                              'File Terlampir',
                               style: TextStyle(
                                 fontFamily: 'Montserrat',
                                 fontSize: 16,

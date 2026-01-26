@@ -82,7 +82,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         setState(() => _regencies = cities);
       }
     } catch (e) {
-      debugPrint("Error loading cities: $e");
+      debugPrint("Error load kota: $e");
     }
   }
 

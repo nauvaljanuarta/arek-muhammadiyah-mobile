@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
         title: const Text('Login Gagal'),
-        content: Text(message),
+        content: Text('Email atau Password salah.\n$message'),
         actions: [
           CupertinoDialogAction(
             child: const Text('Ok'),
