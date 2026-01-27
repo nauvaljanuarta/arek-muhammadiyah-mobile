@@ -49,7 +49,7 @@ class CategoriesList extends StatelessWidget {
         } else if (snapshot.hasError) {
           return SizedBox(
             height: 100,
-            child: Center(child: Text('Error: ${snapshot.error}')),
+            child: const Center(child: Text('Connection Server error')),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox(

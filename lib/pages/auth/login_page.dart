@@ -81,6 +81,13 @@ class _LoginPageState extends State<LoginPage> {
 
     if (UserService.currentUser != null) {
        final user = UserService.currentUser!;
+
+      print('--- DEBUG LOGIN ---');
+      print('NIK: ${user.nik}');
+      print('Force Change: ${user.forceChangePassword}');
+      print('Is Profile Complete: ${user.isProfileComplete}');
+
+
        if (user.forceChangePassword) {
          _handleNavigation(AuthStatus.passwordChangeRequired);
        } else if (!user.isProfileComplete) {
