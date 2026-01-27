@@ -22,12 +22,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   void initState() {
     super.initState();
-    _invalidateSession();
   }
 
-  Future<void> _invalidateSession() async {
-    await UserService.logout(); 
-  }
 
   void _handleChangePassword() async {
     FocusScope.of(context).unfocus();
@@ -53,7 +49,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       await UserService.updateUser(user.id.toString(), {
         'password': _newPassController.text,
-        'must_change_password': false, 
+        'force_change_password': false, 
       });
       
       await UserService.logout();
