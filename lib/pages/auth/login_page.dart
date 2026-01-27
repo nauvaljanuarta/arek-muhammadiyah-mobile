@@ -8,6 +8,7 @@ import '../../services/user_service.dart';
 import 'complete_profile_page.dart';
 import 'register_page.dart';
 import 'change_password_page.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -65,33 +66,37 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
-    FocusScope.of(context).unfocus();
-
-    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showError('Silakan isi semua kolom');
-      return;
-    }
-
-    setState(() => _loading = true);
-
-    try {
-      await UserService.login(
-        telp: _usernameController.text,
-        password: _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      final status = await UserService.checkAuthStatus();
-      _handleNavigation(status);
-
-    } catch (e) {
-      final msg = e.toString().replaceFirst('Exception: ', '');
-      _showError(msg);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+    _showError('Silakan isi semua kolom');
+    return;
   }
+
+  setState(() => _loading = true);
+
+  try {
+    await UserService.login(
+      telp: _usernameController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    if (UserService.currentUser != null) {
+       final user = UserService.currentUser!;
+       if (user.forceChangePassword) {
+         _handleNavigation(AuthStatus.passwordChangeRequired);
+       } else if (!user.isProfileComplete) {
+         _handleNavigation(AuthStatus.profileIncomplete);
+       } else {
+         _handleNavigation(AuthStatus.authenticated);
+       }
+    }
+
+  } catch (e) {
+    final msg = e.toString().replaceFirst('Exception: ', '');
+    _showError(msg); 
+  } finally {
+    if (mounted) setState(() => _loading = false);
+  }
+}
 
   void _handleNavigation(AuthStatus status) {
     switch (status) {
@@ -119,20 +124,32 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  bool _isErrorDialogShowing = false;
   void _showError(String message) {
+    if (_isErrorDialogShowing) {
+      return;
+    }
+    
+    _isErrorDialogShowing = true;
+    
     showCupertinoDialog(
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
         title: const Text('Login Gagal'),
-        content: Text('Email atau Password salah.\n$message'),
+        content: Text('\n$message'),
         actions: [
           CupertinoDialogAction(
-            child: const Text('Ok'),
-            onPressed: () => Navigator.of(ctx).pop(), 
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _isErrorDialogShowing = false;
+            }, 
           ),
         ],
       ),
-    );
+    ).then((_) {
+      _isErrorDialogShowing = false;
+    });
   }
 
 
@@ -292,7 +309,12 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 16),
                       CupertinoButton(
-                        onPressed: () {},
+                        onPressed: () {Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => const ForgotPasswordScreen(),
+                            ),
+                          );},
                         padding: EdgeInsets.zero,
                         child: const Text(
                           'Lupa Password?',
