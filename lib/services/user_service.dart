@@ -15,52 +15,130 @@ class UserService {
   static final ApiClient _client = ApiClient();
   static User? currentUser;
 
-  /// --- AUTH CHECK ---
-  static Future<AuthStatus> checkAuthStatus() async {
+/// --- AUTH CHECK ---
+static Future<AuthStatus> checkAuthStatus() async {
+  try {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
-    if (userJson == null) return AuthStatus.unauthenticated;
+    final token = prefs.getString('token') ?? prefs.getString('access_token');
+    
+    if (userJson == null || token == null) {
+      return AuthStatus.unauthenticated;
+    }
+
+    final isValid = await validateToken();
+    
+    if (!isValid) {
+      return AuthStatus.unauthenticated;
+    }
 
     final user = User.fromJson(jsonDecode(userJson));
     currentUser = user;
 
-    if (user.forceChangePassword) return AuthStatus.passwordChangeRequired;
-    if (!user.isProfileComplete) return AuthStatus.profileIncomplete;
+    if (user.forceChangePassword) {
+      return AuthStatus.passwordChangeRequired;
+    }
+    if (!user.isProfileComplete) {
+      return AuthStatus.profileIncomplete;
+    }
 
     return AuthStatus.authenticated;
+    
+  } catch (e) {
+    return AuthStatus.unauthenticated;
   }
+}
 
   static Future<bool> validateToken() async {
-    try {
-      final response = await _client.get('/auth/navbar');
-      return response.statusCode == 200;
-    } catch (_) {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? prefs.getString('access_token');
+    
+    if (token == null) {
       return false;
     }
+    
+    final response = await _client.get('/auth/navbar');
+    
+    return response.statusCode == 200;
+  } catch (e) {
+    return false;
   }
+}
+
+    /// --- REFRESH TOKEN ---
+static Future<bool> refreshAccessToken() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final refreshToken = prefs.getString('refresh_token');
+    
+    if (refreshToken == null || refreshToken.isEmpty) {
+      return false;
+    }
+    
+    final response = await _client.post(
+      '/auth/refresh',
+      body: {'refresh_token': refreshToken},
+      withAuth: false,
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      
+      if (data['success'] == true) {
+        final newAccessToken = data['data']?['access_token'];
+        
+        if (newAccessToken != null) {
+          await prefs.setString('token', newAccessToken);
+          await prefs.setString('access_token', newAccessToken);
+          return true;
+        }
+      }
+    }
+    
+    return false;
+    
+  } catch (e) {
+    return false;
+  }
+}
 
   /// --- LOGIN & REGISTER ---
   static Future<bool> login({required String telp, required String password}) async {
-    final response = await _client.post(
-      '/auth/login',
-      body: {'telp': telp, 'password': password},
-      withAuth: false,
-    );
+    try {
+      final response = await _client.post(
+        '/auth/login',
+        body: {'telp': telp, 'password': password},
+        withAuth: false,
+      );
 
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200 && data['success'] == true) {
-      final prefs = await SharedPreferences.getInstance();
-      final token = data['data']?['token'];
-      final userData = data['data']?['user'];
-
-      if (token != null && userData != null) {
-        currentUser = User.fromJson(userData);
-        await prefs.setString('token', token);
-        await prefs.setString('user', jsonEncode(userData));
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && data['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        
+        final accessToken = data['data']?['access_token'];
+        final refreshToken = data['data']?['refresh_token'];
+        final userData = data['data']?['user'];
+        
+        if (accessToken != null && userData != null) {
+          currentUser = User.fromJson(userData);
+          
+          await prefs.setString('token', accessToken);
+          await prefs.setString('access_token', accessToken);
+          await prefs.setString('refresh_token', refreshToken ?? '');
+          await prefs.setString('user', jsonEncode(userData));
+          
+          return true;
+        } else {
+          throw Exception('Access token atau data user tidak ditemukan');
+        }
+      } else {
+        final errorMsg = data['message'] ?? 'Login gagal';
+        throw Exception(errorMsg);
       }
-      return true;
-    } else {
-      throw Exception(data['message'] ?? 'Login gagal');
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -86,6 +164,7 @@ class UserService {
       ...body,
       'is_mobile': true,
       'role_id': 3,
+      'force_change_password': false,
     }, withAuth: false);
 
     final data = jsonDecode(response.body);
@@ -98,26 +177,28 @@ class UserService {
 
 
   /// --- LOGOUT & STORAGE ---
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('user');
-    currentUser = null;
-  }
+static Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('token');
+  await prefs.remove('access_token');
+  await prefs.remove('refresh_token');
+  await prefs.remove('user');
+  currentUser = null;
+}
 
   static Future<void> loadUserFromStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user');
-    final savedToken = prefs.getString('token');
+  final prefs = await SharedPreferences.getInstance();
+  final userJson = prefs.getString('user');
+  final savedToken = prefs.getString('token');
 
-    if (userJson != null && savedToken != null) {
-      try {
-        currentUser = User.fromJson(jsonDecode(userJson));
-      } catch (e) {
-        await logout();
-      }
+  if (userJson != null && savedToken != null) {
+    try {
+      currentUser = User.fromJson(jsonDecode(userJson));
+    } catch (e) {
+      await logout();
     }
   }
+}
 
   /// --- WILAYAH FETCHING ---
   static Future<List<Regency>> getCities() async {
