@@ -3,7 +3,6 @@ import '../models/user.dart';
 import '../models/region.dart';
 import 'api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum AuthStatus {
   authenticated,
@@ -16,37 +15,31 @@ class UserService {
   static final ApiClient _client = ApiClient();
   static User? currentUser;
 
-  static final _adminDefaultPassword = dotenv.env['ADMIN_DEFAULT_PASSWORD']; 
+  /// --- AUTH CHECK ---
+  static Future<AuthStatus> checkAuthStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
+    if (userJson == null) return AuthStatus.unauthenticated;
 
+    final user = User.fromJson(jsonDecode(userJson));
+    currentUser = user;
 
-static Future<AuthStatus> checkAuthStatus() async {
-  final prefs = await SharedPreferences.getInstance();
+    if (user.forceChangePassword) return AuthStatus.passwordChangeRequired;
+    if (!user.isProfileComplete) return AuthStatus.profileIncomplete;
 
-  final userJson = prefs.getString('user');
-  if (userJson == null) return AuthStatus.unauthenticated;
-
-  final user = User.fromJson(jsonDecode(userJson));
-  currentUser = user;
-
-  final isDefaultPass = prefs.getBool('is_using_default_pass') ?? false;
-
-  if (isDefaultPass) return AuthStatus.passwordChangeRequired;
-  if (!user.isProfileComplete) return AuthStatus.profileIncomplete;
-
-  return AuthStatus.authenticated;
-}
-
-
-static Future<bool> validateToken() async {
-  try {
-    final response = await _client.get('/auth/navbar');
-    return response.statusCode == 200;
-  } catch (_) {
-    return false;
+    return AuthStatus.authenticated;
   }
-}
 
+  static Future<bool> validateToken() async {
+    try {
+      final response = await _client.get('/auth/navbar');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 
+  /// --- LOGIN & REGISTER ---
   static Future<bool> login({required String telp, required String password}) async {
     final response = await _client.post(
       '/auth/login',
@@ -64,12 +57,6 @@ static Future<bool> validateToken() async {
         currentUser = User.fromJson(userData);
         await prefs.setString('token', token);
         await prefs.setString('user', jsonEncode(userData));
-
-        if (password == _adminDefaultPassword) {
-          await prefs.setBool('is_using_default_pass', true);
-        } else {
-          await prefs.setBool('is_using_default_pass', false);
-        }
       }
       return true;
     } else {
@@ -77,21 +64,18 @@ static Future<bool> validateToken() async {
     }
   }
 
-  static Future<User> updateUser(String id, Map<String, dynamic> body) async {
+    static Future<User> updateUser(String id, Map<String, dynamic> body) async {
     final response = await _client.put('/users/$id', body: body);
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      if (currentUser != null && currentUser!.id.toString() == id) {
-        currentUser = User.fromJson(data['data']);
+      final updatedUser = User.fromJson(data['data']);
+      if (currentUser != null && currentUser!.id == updatedUser.id) {
+        currentUser = updatedUser;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user', jsonEncode(data['data']));
-        
-        if (body.containsKey('password')) {
-           await prefs.setBool('is_using_default_pass', false);
-        }
       }
-      return User.fromJson(data['data']);
+      return updatedUser;
     } else {
       throw Exception(data['message'] ?? 'Failed to update user');
     }
@@ -100,8 +84,8 @@ static Future<bool> validateToken() async {
   static Future<User> register(Map<String, dynamic> body) async {
     final response = await _client.post('/auth/register', body: {
       ...body,
-      'is_mobile': true, 
-      'role_id': 3,      
+      'is_mobile': true,
+      'role_id': 3,
     }, withAuth: false);
 
     final data = jsonDecode(response.body);
@@ -112,12 +96,12 @@ static Future<bool> validateToken() async {
     }
   }
 
+
+  /// --- LOGOUT & STORAGE ---
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('user');
-    await prefs.remove('is_using_default_pass'); // Bersihkan flag
-    
     currentUser = null;
   }
 
@@ -135,8 +119,7 @@ static Future<bool> validateToken() async {
     }
   }
 
-
-  // --- WILAYAH FETCHING ---
+  /// --- WILAYAH FETCHING ---
   static Future<List<Regency>> getCities() async {
     final response = await _client.get('/wilayah/cities');
     final data = jsonDecode(response.body);
@@ -167,6 +150,7 @@ static Future<bool> validateToken() async {
     }
   }
 
+  /// --- USERS CRUD ---
   static Future<List<User>> getUsers({int page = 1, int limit = 10}) async {
     final response = await _client.get('/users?page=$page&limit=$limit');
     final data = jsonDecode(response.body);
@@ -191,5 +175,30 @@ static Future<bool> validateToken() async {
     final response = await _client.delete('/users/$id');
     final data = jsonDecode(response.body);
     return data['success'] == true;
+  }
+
+static Future<bool> forgotPassword({
+    required String name,
+    required DateTime birthDate,
+    required String nik,
+    required String telp,
+  }) async {
+    final response = await _client.post(
+      '/auth/forgot',
+      body: {
+        'name': name,
+        'birth_date': birthDate.toIso8601String().split('T').first,
+        'nik': nik,
+        'telp': telp,
+      },
+      withAuth: false,
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      return true;
+    } else {
+      throw Exception(data['message'] ?? 'Gagal reset password');
+    }
   }
 }
