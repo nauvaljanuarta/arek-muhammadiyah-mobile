@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:ui'; // Perlu untuk ImageFilter (Blur effect)
+import 'dart:ui'; 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart'; // Perlu untuk Colors (jika dipakai di styling)
+import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart'; 
 import '../../config/theme/theme.dart';
 import '../../services/user_service.dart';
@@ -172,25 +172,15 @@ class HomeContent extends StatelessWidget {
             await Future.delayed(const Duration(seconds: 1));
           },
         ),
-        
-        // Jarak yang cukup agar konten awal tidak tertutup Header
         const SliverToBoxAdapter(child: SizedBox(height: 120)), 
-        
-        // Header Greeting
         SliverToBoxAdapter(
           child: HomeHeader(user: user),
         ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
-        
-        // Featured Article
         SliverToBoxAdapter(
           child: StackedFeaturedArticles(), 
         ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-        // Categories
         const SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.0),
@@ -211,10 +201,7 @@ class HomeContent extends StatelessWidget {
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
         SliverToBoxAdapter(child: CategoriesList()),
-
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-        // Latest Articles Header
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
