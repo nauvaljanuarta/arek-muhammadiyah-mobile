@@ -12,13 +12,14 @@ class ApiClient {
   factory ApiClient() => _instance;
   ApiClient._internal();
 
-  final String baseUrl = Connection.baseUrl; 
+  final String baseUrl = Connection.baseUrl;
+  bool _isRefreshing = false;
 
   Future<Map<String, String>> getHeaders({bool withAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};
     if (withAuth) {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = prefs.getString('token') ?? prefs.getString('access_token');
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
@@ -26,20 +27,42 @@ class ApiClient {
     return headers;
   }
 
-  bool _isHandling401 = false;
-
-  Future<http.Response> _handleResponse(http.Response response) async {
+    Future<http.Response> _handleResponse(http.Response response, {String? endpoint}) async {
+    
     if (response.statusCode == 401) {
-      if (_isHandling401) {
-        throw Exception("Unauthorized");
+      if (endpoint == '/auth/login') {
+        return response; 
       }
+      if (!_isRefreshing) {
+        _isRefreshing = true;
+        try {
+          final refreshed = await UserService.refreshAccessToken();
+          if (refreshed) {
+            _isRefreshing = false;
+            return response; 
+          } else {
+            await _logoutAndNavigateToLogin();
+            throw Exception("Sesi berakhir");
+          }
+        } catch (e) {
+          _isRefreshing = false;
+          await _logoutAndNavigateToLogin();
+          rethrow;
+        }
+      }
+    }
+    
+    return response;
+  }
 
-      _isHandling401 = true;
-      await UserService.logout();
 
-      final context = navigatorKey.currentContext;
-      if (context != null) {
-        await showCupertinoDialog(
+  Future<void> _logoutAndNavigateToLogin() async {
+    await UserService.logout();
+    
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showCupertinoDialog(
           context: context,
           barrierDismissible: false,
           builder: (_) => CupertinoAlertDialog(
@@ -61,16 +84,9 @@ class ApiClient {
             ],
           ),
         );
-      }
-
-      _isHandling401 = false;
-      throw Exception("Unauthorized");
+      });
     }
-
-    return response;
   }
-
-
 
   Future<http.Response> get(String endpoint, {bool withAuth = true}) async {
     final url = Uri.parse('$baseUrl$endpoint');
@@ -79,12 +95,11 @@ class ApiClient {
     return _handleResponse(response);
   }
 
-  Future<http.Response> post(String endpoint,
-      {Map<String, dynamic>? body, bool withAuth = true}) async {
+  Future<http.Response> post(String endpoint, {Map<String, dynamic>? body, bool withAuth = true}) async {
     final url = Uri.parse('$baseUrl$endpoint');
     final headers = await getHeaders(withAuth: withAuth);
     final response = await http.post(url, headers: headers, body: jsonEncode(body ?? {}));
-    return _handleResponse(response);
+    return _handleResponse(response, endpoint: endpoint); 
   }
 
   Future<http.Response> put(String endpoint,
