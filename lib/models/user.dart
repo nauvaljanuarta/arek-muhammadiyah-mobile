@@ -1,4 +1,4 @@
-import 'enums.dart'; // Pastikan file enums.dart ada di folder models
+import 'enums.dart'; 
 
 class Role {
   final int id;
@@ -34,8 +34,8 @@ class User {
   final String? nik;
   final String? address;
   final bool isMobile;
-  final DateTime? createdAt; // Bisa null saat register baru
-  final DateTime? updatedAt; // Bisa null saat register baru
+  final DateTime? createdAt; 
+  final DateTime? updatedAt; 
 
   final Role? role;
   final String? villageName;
@@ -45,7 +45,7 @@ class User {
   final String? cityName;
   
   // Private field untuk data dari DB
-  final bool _mustChangePassword;
+  final bool _forceChangePassword;
 
   User({
     required this.id,
@@ -67,8 +67,8 @@ class User {
     this.districtName,
     this.cityId,
     this.cityName,
-    bool mustChangePassword = false,
-  }) : _mustChangePassword = mustChangePassword;
+    bool forceChangePassword = false,
+  }) : _forceChangePassword = forceChangePassword;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -93,9 +93,9 @@ class User {
       districtName: json['district_name']?.toString(),
       cityId: json['city_id']?.toString(),
       cityName: json['city_name']?.toString(),
-      mustChangePassword: json['must_change_password'] == true || 
-                          json['must_change_password'] == 1 || 
-                          json['must_change_password'] == "1",
+      forceChangePassword: json['force_change_password'] == true || 
+                          json['force_change_password'] == 1 || 
+                          json['force_change_password'] == "1",
     );
   }
 
@@ -114,6 +114,7 @@ class User {
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
         'role': role?.toJson(),
+        'force_change_password': _forceChangePassword,
       };
 
   String get locationInfo {
@@ -140,5 +141,5 @@ class User {
            (address != null && address!.isNotEmpty);
   }
 
-  bool get mustChangePassword => _mustChangePassword;
+  bool get forceChangePassword => _forceChangePassword;
 }
