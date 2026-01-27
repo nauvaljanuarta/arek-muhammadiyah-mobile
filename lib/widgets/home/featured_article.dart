@@ -18,6 +18,7 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
   late AnimationController _controller;
   int _currentIndex = 0;
   List<Article> _articles = [];
+  bool _isLoading = true; // State untuk membedakan proses loading
 
   @override
   void initState() {
@@ -36,10 +37,16 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
       if (mounted) {
         setState(() {
           _articles = articles;
+          _isLoading = false; // Loading selesai, data berhasil diambil
         });
       }
     } catch (e) {
-      print('Error loading articles: $e');
+      debugPrint('Error loading articles: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Loading selesai meski terjadi error
+        });
+      }
     }
   }
 
@@ -60,36 +67,20 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
   }
 
   void _onSwipe() {
-    _controller.forward();
+    if (_articles.isNotEmpty) {
+      _controller.forward();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 1. Kondisi saat masih loading
+    if (_isLoading) {
+      return _buildLoadingState();
+    }
+
     if (_articles.isEmpty) {
-      return Container(
-        height: 200,
-        margin: const EdgeInsets.symmetric(horizontal: 24.0),
-        decoration: BoxDecoration(
-          color: CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CupertinoActivityIndicator(),
-              SizedBox(height: 12),
-              Text(
-                'Memuat artikel...',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink(); 
     }
 
     return Column(
@@ -114,18 +105,19 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
                   ),
                 ],
               ),
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: _onSwipe,
-                child: const Text(
-                  'Swipe it for other articles',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 12,
-                    color: AppTheme.primaryMedium, 
+              if (_articles.length > 1)
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: _onSwipe,
+                  child: const Text(
+                    'Swipe untuk artikel lain',
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 12,
+                      color: AppTheme.primaryMedium,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -141,7 +133,7 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
             child: Stack(
               alignment: Alignment.center,
               children: List.generate(
-                _articles.length.clamp(0, 3),
+                _articles.length.clamp(0, 3), // Maksimal 3 kartu di stack
                 (index) {
                   final itemIndex = (_currentIndex + index) % _articles.length;
                   final article = _articles[itemIndex];
@@ -160,7 +152,6 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
     final positionOffset = (stackIndex * 12.0) - (_controller.value * 12.0);
     final scale = 1.0 - (stackIndex * 0.05) + (_controller.value * 0.05);
 
-    // Parse HTML content ke plain text
     final plainTextContent = _parseHtmlToPlainText(article.content);
 
     Widget card = Transform.scale(
@@ -210,7 +201,7 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
 
   Widget _buildCardContent(Article article, String content, int stackIndex) {
     return GestureDetector(
-      onTap: stackIndex == 0
+      onTap: (stackIndex == 0 && !_controller.isAnimating)
           ? () {
               Navigator.of(context).push(
                 CupertinoPageRoute(
@@ -233,16 +224,14 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
         ),
         child: Stack(
           children: [
-            // Background pattern atau image jika ada
             if (article.featureImage != null && article.featureImage!.isNotEmpty)
               Positioned.fill(
                 child: Image.network(
-                  article.featureImage!, // Ganti dari imageUrl ke featureImage
+                  article.featureImage!,
                   fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: AppTheme.primaryLight),
                 ),
               ),
-            
-            // Overlay gradient
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -256,34 +245,24 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
                 ),
               ),
             ),
-
-            // Content
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Featured Badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          CupertinoIcons.star_fill,
-                          size: 14,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
+                        Icon(CupertinoIcons.star_fill, size: 14, color: Colors.white),
+                        SizedBox(width: 6),
+                        Text(
                           'Artikel Pilihan',
                           style: TextStyle(
                             fontFamily: 'Montserrat',
@@ -295,103 +274,55 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
                       ],
                     ),
                   ),
-                  
                   const Spacer(),
-                  
-                  // Title
                   Text(
                     article.title,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       height: 1.3,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black45,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        )
-                      ],
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
                   const SizedBox(height: 8),
-                  
-                  // Content Preview
                   Text(
                     content,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
-                      color: Colors.white,
-                      fontSize: 14,
+                      color: Colors.white70,
+                      fontSize: 13,
                       height: 1.4,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black45,
-                          blurRadius: 2,
-                          offset: Offset(0, 1),
-                        )
-                      ],
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
                   const SizedBox(height: 16),
-                  
-                  // Author & Date
                   Row(
                     children: [
-                      const Icon(
-                        CupertinoIcons.person_circle,
-                        size: 16,
-                        color: Colors.white,
-                      ),
+                      const Icon(CupertinoIcons.person_circle, size: 16, color: Colors.white),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          article.authorName, // Ini sudah benar dari getter
+                          article.authorName,
                           style: const TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 13,
+                            fontSize: 12,
                             color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black45,
-                                blurRadius: 2,
-                                offset: Offset(0, 1),
-                              )
-                            ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(
-                        CupertinoIcons.calendar,
-                        size: 14,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 6),
                       Text(
-                        article.formattedDate, // Ini sudah benar dari getter
+                        article.formattedDate,
                         style: const TextStyle(
                           fontFamily: 'Montserrat',
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black45,
-                              blurRadius: 2,
-                              offset: Offset(0, 1),
-                            )
-                          ],
                         ),
                       ),
                     ],
@@ -405,21 +336,44 @@ class _StackedFeaturedArticlesState extends State<StackedFeaturedArticles> with 
     );
   }
 
-  // Helper function untuk parse HTML ke plain text
+  Widget _buildLoadingState() {
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 24.0),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemGrey6,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CupertinoActivityIndicator(),
+            SizedBox(height: 12),
+            Text(
+              'Memuat artikel...',
+              style: TextStyle(
+                fontFamily: 'Montserrat',
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _parseHtmlToPlainText(String htmlString) {
     String text = htmlString
-        .replaceAll(RegExp(r'<[^>]*>'), '') // Hapus semua tag HTML
-        .replaceAll('&nbsp;', ' ') // Ganti &nbsp; dengan spasi
-        .replaceAll('&amp;', '&') // Ganti &amp; dengan &
-        .replaceAll('&lt;', '<') // Ganti &lt; dengan <
-        .replaceAll('&gt;', '>') // Ganti &gt; dengan >
-        .replaceAll('&quot;', '"') // Ganti &quot; dengan "
-        .replaceAll('&#39;', "'") // Ganti &#39; dengan '
-        .trim(); // Hapus spasi di awal dan akhir
-    
-    // Hapus multiple spaces
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .trim();
     text = text.replaceAll(RegExp(r'\s+'), ' ');
-    
     return text;
   }
 }
