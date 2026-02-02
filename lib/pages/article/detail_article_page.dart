@@ -16,36 +16,84 @@ class DetailArticlePage extends StatelessWidget {
         slivers: [
           CupertinoSliverNavigationBar(
             largeTitle: Text(
-              article.title,
+              article.categoryName.isNotEmpty 
+                  ? article.categoryName
+                  : article.authorName.isNotEmpty
+                      ? article.authorName
+                      : 'Artikel',
               style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 0.5,
               ),
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             backgroundColor: CupertinoColors.white.withOpacity(0.95),
             border: const Border(
               bottom: BorderSide(color: CupertinoColors.systemGrey5, width: 0.5),
             ),
-            trailing: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () {
-                // Share functionality
-              },
-              child: const Icon(
-                CupertinoIcons.share,
-                color: AppTheme.primaryDark,
-              ),
-            ),
           ),
 
-          // Content
           SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Featured Image dengan framing
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Text(
+                    article.title,
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      height: 1.2,
+                      color: AppTheme.textPrimary,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          article.authorName,
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '•',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary.withOpacity(0.5),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        article.formattedDate,
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 14,
+                          color: AppTheme.textSecondary.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
                 if (article.featureImage != null && article.featureImage!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -132,8 +180,6 @@ class DetailArticlePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                // Info Container yang rapi
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Container(
@@ -152,50 +198,14 @@ class DetailArticlePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Meta Information
-                        Row(
-                          children: [
-                            // Author
-                            Expanded(
-                              child: _buildInfoItem(
-                                icon: CupertinoIcons.person_fill,
-                                title: 'Penulis',
-                                value: article.authorName,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            // Category
-                            Expanded(
-                              child: _buildInfoItem(
-                                icon: CupertinoIcons.tag_fill,
-                                title: 'Kategori',
-                                value: article.categoryName,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        Row(
-                          children: [
-                            // Date
-                            Expanded(
-                              child: _buildInfoItem(
-                                icon: CupertinoIcons.calendar,
-                                title: 'Tanggal',
-                                value: article.formattedDate,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
+                        // Meta Information (bisa dihapus karena sudah ada di atas)
+                        const SizedBox(height: 0), // Kosongkan karena sudah ada di atas
                         
                         Container(height: 2, color: AppTheme.surface),
                         const SizedBox(height: 20),
-                        Html(
+                        Container(
+                          width: double.infinity,
+                          child : Html(
                           data: article.content,
                           style: {
                             "body": Style(
@@ -234,30 +244,11 @@ class DetailArticlePage extends StatelessWidget {
                               color: AppTheme.textPrimary,
                               margin: Margins.only(bottom: 12, top: 18),
                             ),
-                            "strong": Style(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            "em": Style(
-                              fontStyle: FontStyle.italic,
-                            ),
-                            "a": Style(
-                              color: AppTheme.primaryDark,
-                              textDecoration: TextDecoration.none,
-                            ),
-                            "ul": Style(
-                              margin: Margins.only(bottom: 16),
-                            ),
-                            "ol": Style(
-                              margin: Margins.only(bottom: 16),
-                            ),
-                            "li": Style(
-                              margin: Margins.only(bottom: 8),
-                            ),
                             "blockquote": Style(
                               padding: HtmlPaddings.all(16),
                               margin: Margins.only(bottom: 16),
                               backgroundColor: AppTheme.surface,
-                              border: Border(
+                              border: const Border(
                                 left: BorderSide(
                                   color: AppTheme.primaryDark,
                                   width: 4,
@@ -265,11 +256,28 @@ class DetailArticlePage extends StatelessWidget {
                               ),
                             ),
                           },
+                            extensions: [
+                              ImageExtension(
+                                builder: (context) {
+                                  return Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 0),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        context.attributes['src']!,
+                                        fit: BoxFit.contain, 
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           onLinkTap: (url, attributes, element) {
                             if (url != null) {
-                              debugPrint("Opening URL: $url");
                             }
                           },
+                        ),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -286,46 +294,4 @@ class DetailArticlePage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: AppTheme.primaryDark,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Montserrat',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontFamily: 'Montserrat',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
 }
